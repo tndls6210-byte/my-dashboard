@@ -3,23 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>영업 대시보드</title>
+<title>ABOS 영업 대시보드</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
+  /* ================= ABOS 로고에서 뽑은 색 ================= */
   :root {
-    --blue: #2563eb;
-    --blue-light: #c7d7fb;
-    --blue-tint: #f3f7ff;
-    --text: #111827;
-    --sub: #6b7280;
-    --faint: #9ca3af;
-    --line: #e9ecf1;
-    --track: #f1f3f6;
+    --ink: #1b1e22;          /* 로고 배경 차콜 */
+    --steel-dark: #4b5259;   /* 진한 철제 회색 */
+    --silver: #c9ced4;       /* 로고 은색 판 */
+    --orange: #ff4500;       /* 로고 화살표 오렌지 */
+    --orange-text: #d63a00;  /* 흰 바탕 위 오렌지 글씨 (읽기 쉽게 조금 진하게) */
+    --page: #f3f4f6;
+    --text: #1b1e22;
+    --sub: #6b7178;
+    --faint: #9aa0a6;
+    --line: #e3e6ea;
+    --track: #eceef1;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-text-size-adjust: 100%; }
   body {
-    background: #fff;
+    background: var(--page);
     color: var(--text);
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
     font-feature-settings: "tnum";
@@ -27,91 +31,113 @@
     word-break: keep-all;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 24px 56px; }
 
-  /* 상단 제목 */
-  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-  h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
-  .updated { font-size: 13px; color: var(--sub); margin-top: 4px; }
+  /* ================= 상단 브랜드 바 ================= */
+  .topbar { background: var(--ink); border-bottom: 3px solid var(--orange); color: #fff; }
+  .topbar-inner {
+    max-width: 1200px; margin: 0 auto; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .mark { width: 42px; height: 42px; display: block; flex-shrink: 0; border-radius: 2px; }
+  .brand-name { font-size: 24px; font-weight: 900; letter-spacing: 0.02em; line-height: 1; }
+  .brand-tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.18em; color: #b9c1ca; margin-top: 6px; white-space: nowrap; }
   .btn {
-    flex-shrink: 0; border: 1px solid var(--line); background: #fff; color: var(--text);
+    flex-shrink: 0; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #fff;
     font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px; cursor: pointer;
   }
-  .btn:hover { border-color: var(--blue); color: var(--blue); }
-  .btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+  .btn:hover { border-color: var(--orange); background: rgba(255,69,0,.14); }
+  .btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
   .btn:disabled { opacity: .5; cursor: default; }
 
-  .notice {
-    display: none; border: 1px solid var(--line); background: #fafbfc; border-radius: 12px;
-    padding: 14px 16px; font-size: 14px; margin-bottom: 14px;
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px 56px; }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap;
+    gap: 4px 12px; margin: 28px 0 18px;
   }
-  .notice .msg { margin-top: 6px; font-size: 12px; color: var(--sub); word-break: break-all; }
+  h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+  .updated { font-size: 13px; color: var(--sub); }
 
-  /* 카드 4개 */
+  .notice {
+    display: none; border: 1px solid var(--line); border-left: 3px solid var(--orange);
+    background: #fff; border-radius: 8px; padding: 14px 16px; font-size: 14px; margin-bottom: 14px;
+  }
+  .notice .line { margin-top: 8px; }
+  .notice .msg { margin-top: 2px; font-size: 12px; color: var(--sub); word-break: break-all; }
+
+  /* ================= 카드 4개 ================= */
   .cards { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-  .card, .panel { border: 1px solid var(--line); border-radius: 16px; padding: 20px; min-width: 0; background: #fff; }
-  .card.main { background: var(--blue-tint); border-color: #dfe8fd; }
+  .card, .panel { border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; background: #fff; }
   .card-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--sub); }
-  .tag { font-size: 11px; font-weight: 700; color: var(--blue); background: #fff; border: 1px solid #dfe8fd; padding: 1px 8px; border-radius: 999px; }
   .card-value {
-    font-size: 26px; font-weight: 700; letter-spacing: -0.03em; margin-top: 10px;
+    font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin-top: 10px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .card.main .card-value { font-size: 42px; line-height: 1.15; color: var(--blue); margin-top: 8px; }
   .card-sub { font-size: 13px; color: var(--sub); margin-top: 6px; }
-  .card-sub b { color: var(--text); font-weight: 600; }
-  .card-sub b.blue { color: var(--blue); }
-  .progress { height: 8px; background: #fff; border-radius: 999px; overflow: hidden; margin-top: 16px; }
-  .progress span { display: block; height: 100%; width: 0; background: var(--blue); border-radius: 999px; transition: width .8s ease; }
-  .progress-row { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: var(--sub); }
-  .progress-row b { color: var(--blue); font-weight: 700; }
+  .card-sub b { color: var(--text); font-weight: 700; }
+  .card-sub b.accent { color: var(--orange-text); }
 
-  /* 패널 */
+  /* 이번 달 매출 카드: 로고 배경과 같은 차콜 + 화살표 무늬 */
+  .card.main {
+    position: relative; overflow: hidden; color: #fff;
+    background: linear-gradient(135deg, #2b3036 0%, var(--ink) 65%); border-color: var(--ink);
+  }
+  .card.main .wm { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); height: 150px; pointer-events: none; }
+  .card.main > *:not(.wm) { position: relative; }
+  .card.main .card-label { color: rgba(255,255,255,.7); }
+  .tag { font-size: 11px; font-weight: 700; color: #fff; background: var(--orange); padding: 1px 8px; border-radius: 4px; }
+  .card.main .card-value { font-size: 42px; line-height: 1.15; margin-top: 8px; }
+  .progress { height: 8px; background: rgba(255,255,255,.14); border-radius: 999px; overflow: hidden; margin-top: 16px; }
+  .progress span { display: block; height: 100%; width: 0; background: var(--orange); border-radius: 999px; transition: width .8s ease; }
+  .progress-row { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,.7); }
+  .progress-row b { color: #fff; font-weight: 800; }
+
+  /* ================= 패널 ================= */
   .row { display: grid; gap: 14px; margin-bottom: 14px; }
   .row.top { grid-template-columns: 3fr 2fr; }
   .row.bottom { grid-template-columns: 1fr 1fr; }
   .panel-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 18px; }
-  .panel h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+  .panel h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
   .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--sub); }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .lg-box { width: 10px; height: 10px; border-radius: 3px; background: var(--blue-light); }
-  .lg-box.dark { background: var(--blue); }
-  .lg-line { width: 16px; border-top: 2px dashed #4b5563; }
+  .lg-box { width: 10px; height: 10px; border-radius: 2px; background: var(--silver); }
+  .lg-box.now { background: var(--orange); }
+  .lg-line { width: 16px; border-top: 2px dashed var(--ink); }
   .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
   .placeholder { color: var(--faint); font-size: 14px; padding: 40px 0; text-align: center; }
 
-  /* 깔때기 */
+  /* ================= 깔때기 ================= */
   .funnel { display: grid; grid-template-columns: fit-content(120px) 1fr auto; column-gap: 12px; align-items: center; }
   .f-name { font-size: 13px; font-weight: 600; }
   .f-bar-wrap { display: flex; justify-content: center; }
-  .f-bar { height: 34px; border-radius: 8px; background: var(--blue-light); }
-  .f-bar.last { background: var(--blue); }
-  .f-count { font-size: 14px; font-weight: 700; text-align: right; white-space: nowrap; }
+  .f-bar { height: 34px; border-radius: 4px; background: var(--silver); }
+  .f-bar.last { background: var(--orange); }
+  .f-count { font-size: 14px; font-weight: 800; text-align: right; white-space: nowrap; }
   .f-conv { grid-column: 2; text-align: center; font-size: 12px; color: var(--sub); padding: 5px 0; }
-  .f-conv b { color: var(--text); font-weight: 600; }
+  .f-conv b { color: var(--text); font-weight: 700; }
   .final {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    margin-top: 18px; padding: 14px 16px; border-radius: 12px; background: var(--blue-tint);
+    margin-top: 18px; padding: 14px 16px; border-radius: 8px; background: var(--ink); color: #fff;
   }
   .final-label { font-size: 13px; font-weight: 700; }
-  .final-sub { font-size: 12px; color: var(--sub); margin-top: 2px; }
-  .final-value { font-size: 28px; font-weight: 800; color: var(--blue); letter-spacing: -0.03em; white-space: nowrap; }
+  .final-sub { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 2px; }
+  .final-value { font-size: 28px; font-weight: 800; color: var(--orange); letter-spacing: -0.03em; white-space: nowrap; }
 
-  /* 순위 */
+  /* ================= 순위 ================= */
   .rank { list-style: none; display: grid; gap: 14px; }
   .rank-top { display: flex; align-items: center; gap: 10px; }
   .rank-no {
-    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-    display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--sub); background: var(--track);
+    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 12px; font-weight: 800; color: var(--sub); background: var(--track);
   }
-  .rank-no.first { background: var(--blue); color: #fff; }
+  .rank-no.first { background: var(--orange); color: #fff; }
   .rank-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rank-amt { font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .rank-amt { font-size: 14px; font-weight: 800; white-space: nowrap; }
   .rank-track { height: 8px; border-radius: 999px; background: var(--track); margin: 8px 0 0 32px; overflow: hidden; }
-  .rank-track span { display: block; height: 100%; border-radius: 999px; background: var(--blue-light); }
-  .rank li:first-child .rank-track span { background: var(--blue); }
+  .rank-track span { display: block; height: 100%; border-radius: 999px; background: var(--silver); }
+  .rank li:first-child .rank-track span { background: var(--steel-dark); }
 
-  /* 화면 크기별 */
+  /* ================= 화면 크기별 ================= */
   @media (max-width: 960px) {
     .cards { grid-template-columns: repeat(3, 1fr); }
     .card.main { grid-column: 1 / -1; }
@@ -120,37 +146,91 @@
     .row.top, .row.bottom { grid-template-columns: 1fr; }
   }
   @media (max-width: 560px) {
-    .wrap { padding: 20px 14px 40px; }
+    .topbar-inner { padding: 12px 14px; }
+    .brand { gap: 10px; }
+    .mark { width: 36px; height: 36px; }
+    .brand-name { font-size: 21px; }
+    .brand-tag { font-size: 9.5px; letter-spacing: 0.12em; }
+    .btn { padding: 7px 13px; }
+    .wrap { padding: 0 14px 40px; }
+    .page-head { margin: 20px 0 14px; }
     h1 { font-size: 20px; }
     .cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .card.target { grid-column: 1 / -1; }
     .row { gap: 10px; margin-bottom: 10px; }
-    .card, .panel { padding: 16px; border-radius: 14px; }
+    .card, .panel { padding: 16px; }
     .card-value { font-size: 21px; }
     .card.main .card-value { font-size: 34px; }
+    .card.main .wm { height: 120px; }
     .final-value { font-size: 24px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .progress span { transition: none; }
   }
 </style>
+<script>
+  // 스크립트가 아예 멈췄을 때(예: Supabase 도구를 못 불러옴) 이유를 화면에 보여주기
+  window.addEventListener('error', function (e) {
+    var n = document.getElementById('notice');
+    if (!n) return;
+    var noLib = typeof window.supabase === 'undefined';
+    n.innerHTML = '<b>' + (noLib ? 'Supabase 도구를 불러오지 못했어요.' : '화면을 그리다 오류가 났어요.') + '</b>'
+      + (noLib ? '<br>인터넷 연결을 확인하고 새로고침해 주세요.' : '') + '<div class="msg"></div>';
+    n.querySelector('.msg').textContent = e.message || '';
+    n.style.display = 'block';
+    var u = document.getElementById('updated');
+    if (u) u.textContent = '불러오기 실패';
+  });
+</script>
 </head>
 <body>
-<div class="wrap">
 
-  <header>
-    <div>
-      <h1>영업 대시보드</h1>
-      <p class="updated" id="updated">데이터 불러오는 중…</p>
+<!-- 상단 브랜드 바 (로고 이미지는 파일 안에 들어 있음) -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img class="mark" id="logo" alt="ABOS 로고" src="data:image/png;base64,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">
+      <div>
+        <div class="brand-name">ABOS</div>
+        <div class="brand-tag">ALL BAEK ONE-STOP SOLUTION</div>
+      </div>
     </div>
     <button class="btn" id="refresh" type="button">새로고침</button>
-  </header>
+  </div>
+</header>
+<script>
+  // 브라우저 탭 아이콘도 로고로
+  (function () {
+    var l = document.createElement('link');
+    l.rel = 'icon';
+    l.href = document.getElementById('logo').src;
+    document.head.appendChild(l);
+  })();
+</script>
+
+<main class="wrap">
+
+  <div class="page-head">
+    <h1>영업 대시보드</h1>
+    <p class="updated" id="updated">데이터 불러오는 중…</p>
+  </div>
 
   <div class="notice" id="notice"></div>
 
   <!-- 1. 카드 4개 -->
   <section class="cards">
     <div class="card main">
+      <svg class="wm" viewBox="0 0 100 80" aria-hidden="true">
+        <defs>
+          <linearGradient id="wmg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#c9ced4" stop-opacity=".16"/>
+            <stop offset="1" stop-color="#c9ced4" stop-opacity=".05"/>
+          </linearGradient>
+        </defs>
+        <polygon points="0,0 16,0 36,40 16,80 0,80 20,40" fill="url(#wmg)"/>
+        <polygon points="30,0 46,0 66,40 46,80 30,80 50,40" fill="url(#wmg)"/>
+        <polygon points="60,0 76,0 96,40 76,80 60,80 80,40" fill="url(#wmg)"/>
+      </svg>
       <div class="card-label">이번 달 매출 <span class="tag" id="curMonth">–</span></div>
       <div class="card-value" id="revenue">–</div>
       <div class="progress"><span id="rateBar"></span></div>
@@ -179,7 +259,7 @@
       <div class="panel-head">
         <h2>월별 매출</h2>
         <div class="legend">
-          <span><i class="lg-box dark"></i>이번 달</span>
+          <span><i class="lg-box now"></i>이번 달</span>
           <span><i class="lg-box"></i>지난 달</span>
           <span><i class="lg-line"></i>목표</span>
         </div>
@@ -204,7 +284,7 @@
     </div>
   </section>
 
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -220,8 +300,10 @@
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // ================= 공통 도구 =================
-  const BLUE = '#2563eb';
-  const BLUE_LIGHT = '#c7d7fb';
+  const ORANGE = '#ff4500';
+  const ORANGE_TEXT = '#d63a00';
+  const INK = '#1b1e22';
+  const BAR = '#c9ced4';
   const state = { monthly: [], pipeline: [], rank: [] };
 
   const $ = (id) => document.getElementById(id);
@@ -251,33 +333,64 @@
     return s;
   }
 
+  // ================= 오류를 알아보기 쉬운 말로 =================
+  const TABLES = ['sales_monthly', 'sales_pipeline', 'sales_rank'];
+  function explain(table, err) {
+    const msg = String((err && (err.message || err)) || '');
+    const code = (err && err.code) || '';
+    const t = table ? `<b>${table}</b> ` : '';
+    let text;
+    if (code === '42703' || /column .*does not exist/i.test(msg)) {
+      text = `${t}테이블에 필요한 칸(컬럼)이 없거나 이름이 달라요.`;
+    } else if (code === 'PGRST205' || code === '42P01' || /could not find the table|does not exist/i.test(msg)) {
+      text = `${t}테이블을 찾지 못했어요. Supabase에 이 이름 그대로(전부 소문자) 테이블이 있는지 확인해 주세요.`;
+    } else if (code === '42501' || /permission denied/i.test(msg)) {
+      text = `${t}테이블을 읽을 권한이 없어요. 읽기(SELECT) 권한과 RLS 정책을 확인해 주세요.`;
+    } else if (/invalid api key|jwt|apikey/i.test(msg)) {
+      text = 'Supabase 키가 맞지 않아요. 코드 위쪽 SUPABASE_KEY를 확인해 주세요.';
+    } else if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+      text = 'Supabase에 연결하지 못했어요. 인터넷 연결과 SUPABASE_URL 주소를 확인해 주세요.';
+    } else {
+      text = `${t}데이터를 읽는 중 문제가 생겼어요.`;
+    }
+    return `<div class="line">${text}<div class="msg">${esc((code ? code + ' · ' : '') + msg)}</div></div>`;
+  }
+
   // ================= 데이터 불러오기 =================
   async function load() {
     const btn = $('refresh');
     btn.disabled = true;
     hideNotice();
     try {
-      const [m, p, r] = await Promise.all([
+      const results = await Promise.all([
         db.from('sales_monthly').select('*').order('sort_order', { ascending: true }),
         db.from('sales_pipeline').select('*').order('sort_order', { ascending: true }),
         db.from('sales_rank').select('*')
       ]);
-      const err = m.error || p.error || r.error;
-      if (err) throw err;
+      const [m, p, r] = results;
 
-      state.monthly = (m.data || []).map((d) => ({ month: d.month, revenue: num(d.revenue), target: num(d.target) }));
-      state.pipeline = (p.data || []).map((d) => ({ stage: d.stage, count: num(d.count) }));
-      state.rank = (r.data || []).map((d) => ({ kind: String(d.kind || '').trim().toLowerCase(), name: d.name, amount: num(d.amount) }));
+      // 테이블마다 따로 확인 (되는 테이블은 그대로 보여주기)
+      const problems = [];
+      results.forEach((res, i) => { if (res.error) problems.push(explain(TABLES[i], res.error)); });
+
+      state.monthly = m.error ? [] : (m.data || []).map((d) => ({ month: d.month, revenue: num(d.revenue), target: num(d.target) }));
+      state.pipeline = p.error ? [] : (p.data || []).map((d) => ({ stage: d.stage, count: num(d.count) }));
+      state.rank = r.error ? [] : (r.data || []).map((d) => ({ kind: String(d.kind || '').trim().toLowerCase(), name: d.name, amount: num(d.amount) }));
 
       renderAll();
-      $('updated').textContent = '마지막 업데이트 ' + new Date().toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-      if (!state.monthly.length && !state.pipeline.length && !state.rank.length) {
-        showNotice('가져온 데이터가 없어요.', '테이블에 데이터가 있는데도 이렇게 보이면, Supabase에서 세 테이블에 읽기(SELECT) 허용 정책(RLS)이 있는지 확인해 주세요.');
+      if (problems.length) {
+        $('updated').textContent = problems.length === 3 ? '불러오기 실패' : '일부 데이터를 불러오지 못했어요';
+        showNotice('데이터를 불러오지 못했어요.', [...new Set(problems)].join(''));
+      } else {
+        $('updated').textContent = '마지막 업데이트 ' + new Date().toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        if (!state.monthly.length && !state.pipeline.length && !state.rank.length) {
+          showNotice('가져온 데이터가 없어요.', '<div class="line">테이블에 데이터가 있는데도 이렇게 보이면, 세 테이블에 읽기(SELECT) 허용 정책(RLS)이 있는지 확인해 주세요.</div>');
+        }
       }
     } catch (e) {
       $('updated').textContent = '불러오기 실패';
-      showNotice('데이터를 불러오지 못했어요.', 'Supabase 주소와 키, 테이블 이름, 읽기 권한(RLS)을 확인해 주세요.<div class="msg">' + esc(e && e.message ? e.message : e) + '</div>');
+      showNotice('데이터를 불러오지 못했어요.', explain('', e));
     } finally {
       btn.disabled = false;
     }
@@ -285,7 +398,7 @@
 
   function showNotice(title, body) {
     const n = $('notice');
-    n.innerHTML = `<b>${title}</b><br>${body}`;
+    n.innerHTML = `<b>${title}</b>${body}`;
     n.style.display = 'block';
   }
   function hideNotice() { $('notice').style.display = 'none'; }
@@ -327,7 +440,7 @@
     const remain = cur.target - cur.revenue;
     $('remain').innerHTML = remain > 0
       ? `남은 금액 <b>${won(remain)}</b>`
-      : `<b class="blue">목표 달성</b>${remain < 0 ? ` · ${won(-remain)} 초과` : ''}`;
+      : `<b class="accent">목표 달성</b>${remain < 0 ? ` · ${won(-remain)} 초과` : ''}`;
 
     $('aov').textContent = contracts ? won(cur.revenue / contracts) : '–';
     $('aovSub').textContent = `매출 ÷ 계약 ${contracts.toLocaleString('ko-KR')}건`;
@@ -375,17 +488,16 @@
     const lastIdx = n - 1;
     const showAllValues = slot >= 54;
     const labelEvery = Math.max(1, Math.ceil(30 / slot));
+    const cxOf = (i) => pad.left + slot * i + slot / 2;
 
     let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 매출 막대그래프">`;
 
     // 가로 눈금선
     for (let i = 0; i <= ticks; i++) {
       const v = step * i, yy = y(v);
-      s += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${yy}" y2="${yy}" stroke="${i === 0 ? '#d9dde3' : '#f0f2f5'}"/>`;
-      s += `<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#9ca3af">${money(v)}</text>`;
+      s += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${yy}" y2="${yy}" stroke="${i === 0 ? '#d3d7dc' : '#eef0f2'}"/>`;
+      s += `<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#9aa0a6">${money(v)}</text>`;
     }
-
-    const cxOf = (i) => pad.left + slot * i + slot / 2;
 
     // 막대 + 월 이름
     rows.forEach((r, i) => {
@@ -393,9 +505,9 @@
       const top = y(r.revenue);
       const isCur = i === lastIdx;
       const tip = `${esc(monthLabel(r.month))} 매출 ${fullWon(r.revenue)} / 목표 ${fullWon(r.target)} (${pct(r.revenue, r.target)})`;
-      s += `<path d="${barPath(cx - bw / 2, top, bw, pad.top + ih - top, 5)}" fill="${isCur ? BLUE : BLUE_LIGHT}"><title>${tip}</title></path>`;
+      s += `<path d="${barPath(cx - bw / 2, top, bw, pad.top + ih - top, 3)}" fill="${isCur ? ORANGE : BAR}"><title>${tip}</title></path>`;
       if ((lastIdx - i) % labelEvery === 0) {
-        s += `<text x="${cx}" y="${H - 9}" text-anchor="middle" font-size="12" font-weight="${isCur ? 700 : 400}" fill="${isCur ? '#111827' : '#6b7280'}">${esc(monthLabel(r.month))}</text>`;
+        s += `<text x="${cx}" y="${H - 9}" text-anchor="middle" font-size="12" font-weight="${isCur ? 800 : 400}" fill="${isCur ? INK : '#6b7178'}">${esc(monthLabel(r.month))}</text>`;
       }
     });
 
@@ -407,7 +519,7 @@
       const t = rows[i].target;
       if (t > 0) {
         const yy = y(t);
-        s += `<line x1="${pad.left + slot * i}" x2="${pad.left + slot * (j + 1)}" y1="${yy}" y2="${yy}" stroke="#4b5563" stroke-width="1.5" stroke-dasharray="5 4"><title>목표 ${fullWon(t)}</title></line>`;
+        s += `<line x1="${pad.left + slot * i}" x2="${pad.left + slot * (j + 1)}" y1="${yy}" y2="${yy}" stroke="${INK}" stroke-width="1.5" stroke-dasharray="5 4"><title>목표 ${fullWon(t)}</title></line>`;
       }
       i = j + 1;
     }
@@ -416,7 +528,7 @@
     rows.forEach((r, i) => {
       const isCur = i === lastIdx;
       if (!showAllValues && !isCur) return;
-      s += `<text x="${cxOf(i)}" y="${y(r.revenue) - 8}" text-anchor="middle" font-size="11" font-weight="${isCur ? 700 : 500}" fill="${isCur ? BLUE : '#6b7280'}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${money(r.revenue)}</text>`;
+      s += `<text x="${cxOf(i)}" y="${y(r.revenue) - 8}" text-anchor="middle" font-size="11" font-weight="${isCur ? 800 : 500}" fill="${isCur ? ORANGE_TEXT : '#6b7178'}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${money(r.revenue)}</text>`;
     });
 
     s += '</svg>';
