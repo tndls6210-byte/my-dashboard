@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABOS 마케팅 대시보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  /* ================= ABOS 로고에서 뽑은 색 ================= */
+  :root {
+    --ink: #1b1e22;          /* 로고 배경 차콜 */
+    --steel-dark: #4b5259;   /* 진한 철제 회색 */
+    --silver: #c9ced4;       /* 로고 은색 판 */
+    --orange: #ff4500;       /* 로고 화살표 오렌지 */
+    --orange-text: #d63a00;  /* 흰 바탕 위 오렌지 글씨 */
+    --page: #f3f4f6;
+    --text: #1b1e22;
+    --sub: #6b7178;
+    --faint: #9aa0a6;
+    --line: #e3e6ea;
+    --track: #eceef1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--page);
+    color: var(--text);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-feature-settings: "tnum";
+    line-height: 1.45;
+    word-break: keep-all;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ================= 상단 브랜드 바 ================= */
+  .topbar { background: var(--ink); border-bottom: 3px solid var(--orange); color: #fff; }
+  .topbar-inner {
+    max-width: 1200px; margin: 0 auto; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .mark { width: 42px; height: 42px; display: block; flex-shrink: 0; border-radius: 2px; }
+  .brand-name { font-size: 24px; font-weight: 900; letter-spacing: 0.02em; line-height: 1; }
+  .brand-tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.18em; color: #b9c1ca; margin-top: 6px; white-space: nowrap; }
+  .btn {
+    flex-shrink: 0; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #fff;
+    font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--orange); background: rgba(255,69,0,.14); }
+  .btn:focus-visible, .sort:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px 56px; }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap;
+    gap: 4px 12px; margin: 28px 0 18px;
+  }
+  h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+  .updated { font-size: 13px; color: var(--sub); }
+
+  .notice {
+    display: none; border: 1px solid var(--line); border-left: 3px solid var(--orange);
+    background: #fff; border-radius: 8px; padding: 14px 16px; font-size: 14px; margin-bottom: 14px;
+  }
+  .notice .line { margin-top: 8px; }
+  .notice .msg { margin-top: 2px; font-size: 12px; color: var(--sub); word-break: break-all; }
+
+  /* ================= 카드 4개 ================= */
+  .cards { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .card, .panel { border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; background: #fff; }
+  .card-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--sub); }
+  .card-value {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin-top: 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-sub { font-size: 13px; color: var(--sub); margin-top: 6px; }
+  .card-sub b { color: var(--text); font-weight: 700; }
+  .card-sub b.accent { color: var(--orange-text); }
+
+  /* 이번 달 광고비 카드: 차콜 + 화살표 무늬 */
+  .card.main {
+    position: relative; overflow: hidden; color: #fff;
+    background: linear-gradient(135deg, #2b3036 0%, var(--ink) 65%); border-color: var(--ink);
+  }
+  .card.main .wm { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); height: 150px; pointer-events: none; }
+  .card.main > *:not(.wm) { position: relative; }
+  .card.main .card-label { color: rgba(255,255,255,.7); }
+  .tag { font-size: 11px; font-weight: 700; color: #fff; background: var(--orange); padding: 1px 8px; border-radius: 4px; }
+  .card.main .card-value { font-size: 42px; line-height: 1.15; margin-top: 8px; }
+  .progress { height: 8px; background: rgba(255,255,255,.14); border-radius: 999px; overflow: hidden; margin-top: 16px; }
+  .progress span { display: block; height: 100%; width: 0; background: var(--orange); border-radius: 999px; transition: width .8s ease; }
+  .progress-row { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,.7); }
+  .progress-row b { color: #fff; font-weight: 800; }
+
+  /* ================= 패널 ================= */
+  .row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .row.bottom { grid-template-columns: 3fr 2fr; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 18px; }
+  .panel h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+  .hint { font-size: 12px; color: var(--sub); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--sub); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .lg-box { width: 10px; height: 10px; border-radius: 2px; background: var(--silver); }
+  .lg-box.now { background: var(--orange); }
+  .lg-linedot { position: relative; width: 18px; height: 2px; background: var(--ink); }
+  .lg-linedot::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; box-sizing: border-box;
+    border: 2px solid var(--ink); background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
+  }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .placeholder { color: var(--faint); font-size: 14px; padding: 40px 0; text-align: center; }
+
+  /* ================= 채널별 성과 표 ================= */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -20px; padding: 0 20px; }
+  table.ch { width: 100%; min-width: 860px; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  .ch th {
+    text-align: right; font-size: 12px; font-weight: 600; color: var(--sub);
+    padding: 0 12px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; background: #fff;
+  }
+  .ch td { text-align: right; padding: 13px 12px; border-bottom: 1px solid #f0f1f3; white-space: nowrap; background: #fff; }
+  .ch th:first-child, .ch td:first-child { text-align: left; position: sticky; left: 0; z-index: 1; padding-left: 0; }
+  .ch td.name { font-weight: 700; }
+  .ch tbody tr:hover td { background: #f8f9fa; }
+  .ch tfoot td, .ch tfoot td:first-child {
+    font-weight: 800; background: #f6f7f8; border-top: 2px solid var(--ink); border-bottom: none;
+  }
+  .ch tfoot td:first-child { padding-left: 10px; }
+  .sort {
+    background: none; border: 0; font: inherit; color: inherit; cursor: pointer; padding: 0;
+    display: inline-flex; align-items: center; gap: 3px;
+  }
+  .sort:hover, th.active .sort { color: var(--text); }
+  .sort .arrow { font-size: 9px; color: var(--orange-text); min-width: 8px; }
+  .roas-cell { display: inline-flex; align-items: center; gap: 10px; }
+  .roas-val { min-width: 46px; text-align: right; font-weight: 700; }
+  .roas-track { position: relative; width: 120px; height: 8px; background: var(--track); border-radius: 999px; }
+  .roas-track span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--silver); }
+  .roas-track span.best { background: var(--orange); }
+  .roas-track span.total { background: var(--steel-dark); }
+  .roas-track i { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); opacity: .45; }
+
+  /* ================= 예산 소진 페이싱 ================= */
+  .pace-row { margin-bottom: 16px; }
+  .pace-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .pace-head b { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .pace-head b.o { color: var(--orange-text); }
+  .pace-track { position: relative; height: 14px; background: var(--track); border-radius: 4px; }
+  .pace-track span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+  .pace-track .burn { background: var(--orange); }
+  .pace-track .time { background: var(--steel-dark); }
+  .pace-track .mark { position: absolute; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--ink); }
+  .pace-note { font-size: 12px; color: var(--sub); margin-top: 10px; }
+  .pace-msg { background: var(--ink); color: #fff; border-radius: 8px; padding: 14px 16px; margin: 4px 0 16px; }
+  .pace-msg .speed { font-size: 15px; font-weight: 700; }
+  .pace-msg .speed b { color: var(--orange); }
+  .pace-msg .forecast { font-size: 13px; color: rgba(255,255,255,.75); margin-top: 4px; }
+  .pace-msg .forecast b { color: #fff; }
+  .pace-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .pace-stats span { display: block; font-size: 12px; color: var(--sub); }
+  .pace-stats b { font-size: 16px; font-weight: 800; white-space: nowrap; }
+
+  /* ================= 화면 크기별 ================= */
+  @media (max-width: 960px) {
+    .cards { grid-template-columns: repeat(3, 1fr); }
+    .card.main { grid-column: 1 / -1; }
+  }
+  @media (max-width: 860px) {
+    .row.bottom { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .topbar-inner { padding: 12px 14px; }
+    .brand { gap: 10px; }
+    .mark { width: 36px; height: 36px; }
+    .brand-name { font-size: 21px; }
+    .brand-tag { font-size: 9.5px; letter-spacing: 0.12em; }
+    .btn { padding: 7px 13px; }
+    .wrap { padding: 0 14px 40px; }
+    .page-head { margin: 20px 0 14px; }
+    h1 { font-size: 20px; }
+    .cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .card.wide { grid-column: 1 / -1; }
+    .row { gap: 10px; margin-bottom: 10px; }
+    .card, .panel { padding: 16px; }
+    .table-wrap { margin: 0 -16px; padding: 0 16px; }
+    .card-value { font-size: 21px; }
+    .card.main .card-value { font-size: 34px; }
+    .card.main .wm { height: 120px; }
+    .pace-stats b { font-size: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .progress span { transition: none; }
+  }
+
+  /* 경영 대시보드로 돌아가기 */
+  a.brand { text-decoration: none; color: inherit; }
+  .back {
+    display: inline-flex; align-items: center; gap: 4px; margin-bottom: 6px;
+    font-size: 13px; font-weight: 600; color: var(--sub); text-decoration: none;
+  }
+  .back:hover { color: var(--orange-text); }
+  .back:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 2px; }
+</style>
+<script>
+  // 스크립트가 아예 멈췄을 때(예: Supabase 도구를 못 불러옴) 이유를 화면에 보여주기
+  window.addEventListener('error', function (e) {
+    var n = document.getElementById('notice');
+    if (!n) return;
+    var noLib = typeof window.supabase === 'undefined';
+    n.innerHTML = '<b>' + (noLib ? 'Supabase 도구를 불러오지 못했어요.' : '화면을 그리다 오류가 났어요.') + '</b>'
+      + (noLib ? '<br>인터넷 연결을 확인하고 새로고침해 주세요.' : '') + '<div class="msg"></div>';
+    n.querySelector('.msg').textContent = e.message || '';
+    n.style.display = 'block';
+    var u = document.getElementById('updated');
+    if (u) u.textContent = '불러오기 실패';
+  });
+</script>
+</head>
+<body>
+
+<!-- 상단 브랜드 바 (로고 이미지는 파일 안에 들어 있음) -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html" title="경영 대시보드로">
+      <img class="mark" id="logo" alt="ABOS 로고" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIIAAACCCAIAAAAFYYeqAAAU+klEQVR42u1dSY/jSHZ+EaLW1L7losyqXqu62t3Vs9xs3wb+FwYM+GL7j/g32IcBDBuwDQMeG5hf0Je5eAYzPe3qpaoXV2dXSSRFbbloJcMHUWKQjCAfKUrdBxHIyqwI8nGJeO9734sXEeQ3//MHAGCMAcD6HwDgSjb/3Va7TmTua4EBA1fxtsSRzf/pLuHKvKdvbyx4xG3J5pbO0zHJLbcP5ylxXpfxD+K6gLkfa3MP7kFtId5vKPx7/a/C/yfgHb3N4GqdH6YZvB99l2bwfPSDNwMF7iBk/eM5iP3DlxC+iNglrtM8cgjZlvhPJ1yF717E94jus10lwt/23YnnpbgS+7aEyF7aeWDfvbwfjBDvI3tL/LUKc3d4gXr6StyawfULdwmnGf7+7u+m/v7OfJrh7u/izurt70yg31uZzP2nSwN8/V3W3QM0I1gnnDIq6gmebuftoMSvLURQIu0AfKX/TBKghVItJYLuK+6uRCxX8Li+tyeip+cVlkBIr5fqjeLuywF44HROD0Kg8MCtCYEag4Flvx74NcZ9U7HGuHEOjwdhCIHBA76EEiLscpKeSAQI4e+CxI8Hm1IiwQMIxgOB0fbjgaiHSzBMfC+PXfDjgR8BQawHGDzgS9yekhwhwjQDgwecGWYyPAhzQxFOp7BDs6h44NEVrgP7erQHIULwwHcv8HlKfotIJHgg8iUkeEBkiiR0o0AENEIcCsADIX75FCYQDyDEISJEflGQTrh1i3i14cgPDsEPZJpBj/zgkPxAphnKkR8ckh/IdIIe+cEh+QERYyxRGGNHfnAwfiDzrOiRHxySH3h0S+gpHfnB3vmBrJYe+cEh+YGsdq0NR35wIH4g9ZSO/OCQ/ECmGcqRHxySH/h0gjks+sgPDsYPfDpBBDGlIz/YNz+Q1dIjPzgkP5DVKkd+cEh+gIiwHvnB/vmB7OkUX68/8oM98gNZLT3yg0PyA1mt4mcMR36wP34guZbRIz84JD8AcKTxKqywIz84ID+Q6Y2yaSvm/AJCwLEJ61ICxC5xznU+8lu//Y/3P/4HCD0I+fXf/vcynePvxcvZdk5G7C95/rv/evjxLzGSf/M3/2YqWWZfD4yTvHkfwt+o+NtfVz7+F4zk67/7palktz2Z/6Cur0eAcxaCaglZ/+E8IWXrAxhby2fAl8Cmwi5Z/1rLY5sDoP/gp4A5GGte/965zCt+/YqukvHVU6TkyvUnjgjPI28qnHcAmD/4ACk5e/0MtgKcp7f7tf0m7kcPrt3qx7aWJsIPxq13ltkS5qVa338SiR/cN99a5YoYydXvP43ED5atN6zcCUZy7vpZUvxAVpv6y7/660T4QU39vDT4LvSVJlr37z+7HY8nDx8+RPKDYu95YfB9qOSbvvqP384nk5tO5xLJDzK9r9KDV6GSbwf6r3rm7e3t2dlZgsxZmLW3Kz/oX6Hs0hvWuAiLXq+L5wdIu9QxxwW20HUNzw9mlyi71FiMs9bCMPoJMWdBLQUxHvCGVYwHnAVmwJiOawYA+MlSnU6no9HQseJb0RsbyllZNkLCA8B7c3U2m91Mxh7zyz2y65g/+BOk5Kt7dT6f397ehOGB83kYC6r1XEuT4gc39QfzQg3zSk9NFQB6XRXJD6a1q2WhipH8aKkCgKbpSH6wrHfMkwpG8uVUBQDDGOzID2RoQXmXwtddeHXgNUN8jn71E1wzaADQ63VZ8AHObUeXKIV4tNAAQNNV/xPKXmx+iVKIy5kGAIahh38eUSFAyCU0wfEDpF3qWDdVNuuqXWCAHD9AwkPbvClZM13XBK69JF40u0LBQ3V5UzBnhmEwxjDjB14tDEMLGokfMMe+bWmGYwX7lx8hTe1PV73FfDEcDjj9cuGBgxJreLj8ECn5yaK3WCzHo7HfIvs9esbY7PJ9LDxMe8vl8uZmsgs/cF/raAlNcPzgrnJ+Xz7FvNJHpgYAXbWHHD+YVU7n5RZG8uO1XerryPGDVfXULDVxzaABgDEY7MIP3LXOC1O282Hx8IBTiJ+vugDQ63aDZLmPUQdll95fdAFA11T880+vUPDw4L4LAIO+HgpoMWppsuMH+iUKpatsdmbdqqpqh1YQ4wcjnI9fsmZN81bv9xkD5PgB0i4VzFlleWsMhhtblCR7oFH5gWPSHDxxQKWHZg9PTW21WhlGX4YHbksKgyss8DxaauZqNRgOZXjgKZkig0sAnZlmmqvxZBybH/B4wF9Lkx0/WBRqt7UODh5UAFA5eAgeP1gWqtPqBQ4eVADob+h06PiBWaiuauc4eFABYGAYsfmB1zXcsugY/IAxQQRze2gdHHtYrdlDj+cHwQfSX1qzB13X8TZ62kHZpc5UA4DBwIjND2Sn0cTzi/DwcGVOdF23LEvUmQT5RcPOh0h4OFtNDMNgloUcT55eYeGhtpgMh0MPe8DzA/eXJVtlojH4AXh+u2FExXFpAHhqqaZp6rouwQPmGT8YoNnDo6VqWaax4SVyH98+7i+xwaXLmWpZ1mg0jMcPRNyCAdieUjR+4Glaj1+1yBbHjTfwdklVNWR+0SpbvK0/wNulvt5HZlGw3MmieYULLq3tUiT2IFmIgaul8fhB8KF1PkI2AwHQ1B7+GYY4t/XRQiMA/RAf3w0PF+8jm4EI4CESexDxBthDfhGyGYqweNMc9o2+aZrI/KIRDh4KbNFZDQfDgWWZMjzwaMb91ROM5Ky1aMyHo9FoC2kR2QMBEKAVjccPfOPJwHtX6uXTgJQTT1TDsixd07f8AMAb7eUccja8+AAp+fFCY5Y1MAa81fZ5LI5Nn3WeICVfzTTG2Gg4isEP3M7SdgzT8ZQgwfyiVTo/aL2LH3tQNRVw+UWrdG7Sehs/9qD3deG4m/+DW+n8vPUmfuxhMDRi8AMZWtDY/MCvGW54QFmPD0ydAGhqWAiIkz08R3k17yx0AmD0+zKJfuW476Ds0sVMJwDDwSAGPwjChn3MP1Bx8JBjq0emMRgOVqsVcv7BAIfSWbZ6uDRG45FprpDzD6a4Zkhbq/bcmNxMTNOMyg+knlJsfhCcX6Sef8hoChnVYIzpmorMLxpdPLFwkh8vVcaYRyECRgjuL95jBCX5aqoyxobDQVR+wOMBX0VhP/MPWCrdP32MHxNVNS04oWLbmyyambRRwGOzB8NAejKgKPOzt3HwoAHAcDiIyg9ERJ4fi47FD4IP9QI3QrDSU8A0TcNLHlyg4OHthZ4C1jf6eMl3Fyi7dD7TKbAhF8Td8aC78IPg/CIVN1CTBuv9lT4aDReLBeDyi5DNoID11kKfjMfL5RLp4yNROsWs86l+c3OzWq4i8QO5p7QDPwjOL9LaT6xUGhdc0gBAXysEZ7pl+UXj08cWRUl+tFxnVBiAyy+anb/DUgo+V2M4GkTiB77QnWe8IRY/EFhZrozRlHaGihA8XakAoPVVZH6RRVOjs8c4eFjnF+lh42L2L0ZS07NHePYwHA0j8QMeDwQsOjY/CM4vUi9Q7OGxaaTB0jUNn19k4OzSG0tDAWud2IIM/tx33sNIPp0ZKWaN7DHReIiwnajB5SntY35yD4fSKWAfrrTJ5GY+m/tuJR5PRsJDCti7C+329nYxnyPzi+5w8ECBdaba3f2dDWnR8YA/ge7ID4Lzi/qtd1fpHD6qoekqMr9o1Hx7peQi2KVBH5lfNG2+aaWzyLEHABiNBvHwgK+lO/KDkPnJhKjnH+CaQYN1+ilyfjKlw/MneJTuG+gRAkruz1HA07HZwygKHghfil+xfj/zk/2zkAKOdd4jcn4yRBAMA0PHzz+IdIyGg6C5dd61/11vBs4qAXudn8zYae8Z5mX+mGoDwN3dHXZ+MmO13ucYyc/TbQC4v58GekrcczModL/ESH6VbwPAdDaLhwcOPfOs0Z34/OSm9kJZznDNcBqsAZ6SqvaVskJJfp45dbVe4PxkxiCvfUOXc4zk73Ongi8DsjWdg2rp7vxAQnqBAJx1P8W8jwnkU6UdfI5HJerdz5CSX2TaIhiQ5hcVXn+BkWwBWWuDzJ8U8gNZrbLX+cln3T+iOmyqsQQKAJlMFjk/ud5F2bqX6cYKKACk0xnkWhcnr1C2Ts01TEIBQEmn3ZKxeODChv2tX0SY2caZ7082FqnZbAThgcMGrHoPZb6/3Fiker3mxwN/fhEFq6C+iGSRqpVKRDwQaInC9rZ+UUv9ImUu8fgMAM1GO8xHYgBQ6X1JLZTkNT4DQL3WwPhIue5XxFyhmmFjkaqVWjw8cGPD3tYvOuv+L+Z9lkC/UOwZBs1WM8xHIgCk3kUp2QrotxlbYL1Rx8w/OOmigMEktJezJVeqVTw/kNUqjLE9rV909hoFDJ+nWmtgyGazxWIR4yk1cMDwTbq1BoZMNlMonMgsOC/5BIfP3VxrDQzpTDqfz0s8pRA88K3Duof1i1Lmqq0/xwGDrd2tVguTb0qtZVX7CgcMtuRGvYGZf0DMVV79GgcMjkWKxA8k3MLxlBJev6jde0Z8qVrCY+uqNpstPuADkvWLat0vKENJ3rqq9VpjM9buZQ8uH6n7JWEWnrgBQLVa5WNUEdmDwFNKeP0iJGOYEeV5qrFphiYg1i9q4hjDnCgv07bkWr0OiPkHSGBYUkXNNThgiMAP/BrprDy5j/WLzl+jmuEZba3zJgv5fD5f8HBcIXtAAsPXaVtyPpfL5XJcorrUU0ICw+tsywICALlsNmsTnTh44GXRia9vml7NmgbKyH7iWKR2AB44HsVqVjG+jQQM9XoTM/+ALhf5/ksUMBTaG1WoReUHMm6hMP9ykzuvb3rWe4YMrH6q2CSo0WwGMFsuhvE5UvKLDXGr1Wrha4ytYxg4ya/ytuRKpbILHsh2uorJDzxBWQJw9hoLDF9Tu0O12+1QTwYAGmhguFZsyY1GI2h0YfPCJzhavqSKnrEl16q1qPwggEUnv77pOY64/SF1ur6mVCplMqiYD7IZvszYkk9OTtKZNEZyEQcM13lbcqFQUNKK25eLhgccEHLrKSW1vmlmeVcf/h8qhrEBhq1FgsCZOenFXXn4HUby8w0w1Op1zPyD1Pw+h1g5i49hVCqVGPxAeHdnje4E1zdF+kj8GEOj3nRvqiLuuc3eZ0jJz9MbYKjWJT6Sq28iXVUAeLWJ6JXLVcZ2wgO+lia+vinSIt1C5iWtrLt/s9H08wN/32m8RjXDPcm8VmzJtVo9AA+2hUVcM8xpxsjYkj3agOQHslrXGt2JrG963kM1w++V9bp1UCqVOSMbtIJpA6cNX2RtySfFoqKkfJIFPv7JaxQ+f1ewJRcKhY3kmHjgZdHJ7n+Qn44r41eRgKHVbGLmH2Sn4+K4i8JnJ7hdx8w/UKY32XEvUiipUqnG4wcCN5Tb6Sqx/Q8uunhg2OJzI0EfyRVKqtcweRJI8syHkiqVyu54IBiLjscP/EqEtEgjkntNSwBACG3YwBAy/6Cpoprhhua01FoyqVZrmHGxEi4P4z6VG6VtyZVyOR4/kNV6d0Hccf+Dc/VZJGCoVquUpjAZRE3cUM/nmbONJ1MJlOyUFHDE7TpvSy4Wi4TSKLlJrpX9xZ5SgvsflO76pRs10hiDm+JKYz75W6Nwq0cKJVVdAR/p/IP07SB708c1Q3vbwLH5gcgPXO/75vWU4u9/gHRVAeB3yvmmGZoBnsy2CmmRAOCzzPkGn2uS2KfrXiU0Y/iuYEuulCsB/ToKWvCrEie3/wESGLq0OCI5AKA0tU2YCNYJpEXSU8UbupZMK9UKZn5yEWeRxkrxPmVLLpVLsfmBb5Itv+9bQvsfdHqowedPNxapVqsRQjH7H7RwDfxi46pWyhVCiDt3W+wpId2krY9UKpZ4yVH5gQwtaDx+wEGHXViZdPPTMQ4YTt3AELI/2smkl51OkBE9GxjqNcz85OxES+MkX2+C2+VKeRd+IEMLJan90S56WGDgI3ooHwmXc+aK6NnAEKLTxV5kxlC2GUNsPADRhnhcDmskfuC/6ByHote0vAaGVEqpOmGZoHGxpor6WL1UeQ0MqVSqXKoIB8U8PbfYReWODNLlDTCkiifF3fAAglj07vujdXDpqtuoar1eAyCYHQ7auMHnbeb2On8rmDmva0tYYNhGVUvcM8fhBzLNoDH4gX/+QWN8nV3cRbNI9SYgZu5Xxt+ncZIdi1StAWJ+cn70OrW4jzTGsGUMsfmBTDOURPZHwzMGDhjqIh/JyyKQrqq7GarBUdX130VcDMPdDGV7CnlcfiCrJf/877+CxDZqZM+ePfv66/CUunQ6/Ytf/MXa85NDtOtjvnjx/OXL8EE9Ja382Z/+OSEEH3z+9ttvXr0KjworivKzn/3cJzmZJnHFlHbfH03XUSGHer0OAO4cvZD90YyBgZFcrVQ3krHNMBqNMJJLpZJIcjR+ILtWgbD90RyE4C6T7IAGZ+fnm32IXLf0lPiyJSB0f7R267TVbIukue5SrVU3Btr7dBvJ3p3m6vVmvd4IfeZypSzapc5b4t79za7dvMj2jVyvDADkn/71PyPxgzDTlPwuUFHnWQbWJpBvugs/kNXSqPzA6zPtZ//kpNY3FT1ynPkHSfEDN6XngOfHuX/yQTQDds8viqcZPi1h9Me5f3JS65tGnZ+c1PiBXDOEQ/9EYVH4ARxq/2Rk3/SPH/ygeIDymkA+Fv2j2z8ZiQex1y/C1cYfPwiIqgprFe+MsB/H/snBtXFtegJ4sCM/kF1LZeMHcfEgfPxA4jnALvsfxMKDBPKL0GgBgdc6ntKRHxyCH0jHoo/84JD8IGgs+sgPDsYPAjylIz84HD/gawM8pSM/2C8/kGd0H/nBAflBaEb3kR8cgh+4r+Wz9o784ID8wH0t4ceij/zgcPxAphM0bOyP7FB7gGOnxyMk/r0C6A5KVtC86Cj2PaLXFMPziV37Q/Z0RK2AW9DAfhFkwSN6TTE8HwhkwrAfJkxE7xtQG8MvEjyWgvaLEsAPEY0IYRtJeE0hPT1Yb+J5Psiv6s7oDmcM4tq4ng9PI4TxJSI3xzG8phCbLvLl4nlNJGJcjmPR+/D3cTw5AoveGQ/2y6KDdQJzLZXjAUkiOhRg8SF63DTE39+BRbv5TWCteM1auU4I2YPnhPie0gE044CRUV9v9a+hg+7dSDyQsWj4sWkGjwdRNSNiZNT35Nhr4+MBX6Uc+cEh+QGTuIz/D+20/cCepKWtAAAAAElFTkSuQmCC">
+      <div>
+        <div class="brand-name">ABOS</div>
+        <div class="brand-tag">ALL BAEK ONE-STOP SOLUTION</div>
+      </div>
+    </a>
+    <button class="btn" id="refresh" type="button">새로고침</button>
+  </div>
+</header>
+<script>
+  // 브라우저 탭 아이콘도 로고로
+  (function () {
+    var l = document.createElement('link');
+    l.rel = 'icon';
+    l.href = document.getElementById('logo').src;
+    document.head.appendChild(l);
+  })();
+</script>
+
+<main class="wrap">
+
+  <div class="page-head">
+    <div>
+      <a class="back" href="../index.html">← 경영 대시보드</a>
+      <h1>마케팅 대시보드</h1>
+    </div>
+    <p class="updated" id="updated">데이터 불러오는 중…</p>
+  </div>
+
+  <div class="notice" id="notice"></div>
+
+  <!-- 1. 카드 4개 -->
+  <section class="cards">
+    <div class="card main">
+      <svg class="wm" viewBox="0 0 100 80" aria-hidden="true">
+        <defs>
+          <linearGradient id="wmg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#c9ced4" stop-opacity=".16"/>
+            <stop offset="1" stop-color="#c9ced4" stop-opacity=".05"/>
+          </linearGradient>
+        </defs>
+        <polygon points="0,0 16,0 36,40 16,80 0,80 20,40" fill="url(#wmg)"/>
+        <polygon points="30,0 46,0 66,40 46,80 30,80 50,40" fill="url(#wmg)"/>
+        <polygon points="60,0 76,0 96,40 76,80 60,80 80,40" fill="url(#wmg)"/>
+      </svg>
+      <div class="card-label">이번 달 광고비 <span class="tag" id="curMonth">–</span></div>
+      <div class="card-value" id="spend">–</div>
+      <div class="progress"><span id="burnBar"></span></div>
+      <div class="progress-row"><span id="budgetText">예산 대비 소진율</span><b id="burnText">–</b></div>
+    </div>
+    <div class="card wide">
+      <div class="card-label">통합 ROAS</div>
+      <div class="card-value" id="roas">–</div>
+      <div class="card-sub" id="roasSub">&nbsp;</div>
+    </div>
+    <div class="card">
+      <div class="card-label">CAC</div>
+      <div class="card-value" id="cac">–</div>
+      <div class="card-sub" id="cacSub">&nbsp;</div>
+    </div>
+    <div class="card">
+      <div class="card-label">전환수</div>
+      <div class="card-value" id="conv">–</div>
+      <div class="card-sub" id="convSub">&nbsp;</div>
+    </div>
+  </section>
+
+  <!-- 2. 채널별 성과 표 -->
+  <section class="row">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>채널별 성과</h2>
+        <span class="hint">제목을 누르면 정렬돼요 · ROAS 막대의 세로선 = 100%(광고비만큼 매출)</span>
+      </div>
+      <div class="table-wrap" id="channelTable"><div class="placeholder">불러오는 중…</div></div>
+    </div>
+  </section>
+
+  <!-- 3, 4. 광고비·ROAS 그래프 / 예산 페이싱 -->
+  <section class="row bottom">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>월별 광고비 · ROAS</h2>
+        <div class="legend">
+          <span><i class="lg-box now"></i>이번 달</span>
+          <span><i class="lg-box"></i>광고비</span>
+          <span><i class="lg-linedot"></i>ROAS</span>
+        </div>
+      </div>
+      <div class="chart" id="combo"><div class="placeholder">불러오는 중…</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>예산 소진 페이싱</h2></div>
+      <div id="pacing"><div class="placeholder">불러오는 중…</div></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ================= 연결 정보 =================
+  const SUPABASE_URL = 'https://rslrkmfbywfmednotfta.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzbHJrbWZieXdmbWVkbm90ZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NjQ2MTksImV4cCI6MjEwNjM0MDYxOX0.9rv7w5HVHo0PymE48kwoyjTsqpC2xmXJB5u5E0ic7Ps';
+
+  // ================= 금액 단위 =================
+  // DB에 들어있는 금액이 '원' 단위면 1, '천원' 단위면 1000, '만원' 단위면 10000
+  const MONEY_UNIT = 1;
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ================= 공통 도구 =================
+  const ORANGE = '#ff4500';
+  const INK = '#1b1e22';
+  const BAR = '#c9ced4';
+  const state = { channel: [], monthly: [], budget: [] };
+
+  const $ = (id) => document.getElementById(id);
+  const num = (v) => Number(v) || 0;
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const trimZero = (s) => (s.includes('.') ? s.replace(/\.?0+$/, '') : s);
+  const placeholder = (t) => `<div class="placeholder">${t || '표시할 데이터가 없어요'}</div>`;
+  const count = (v) => Math.round(num(v)).toLocaleString('ko-KR');
+
+  // 짧은 금액: 3,450만 / 1.25억
+  function money(v) {
+    const w = num(v) * MONEY_UNIT;
+    const a = Math.abs(w);
+    if (a >= 1e8) return trimZero((w / 1e8).toFixed(a >= 1e10 ? 0 : a >= 1e9 ? 1 : 2)) + '억';
+    if (a >= 1e4) return Math.round(w / 1e4).toLocaleString('ko-KR') + '만';
+    return Math.round(w).toLocaleString('ko-KR');
+  }
+  const won = (v) => money(v) + '원';
+  const fullWon = (v) => Math.round(num(v) * MONEY_UNIT).toLocaleString('ko-KR') + '원';
+  // 단가(CPC·CPA·일 평균)는 100만원 미만이면 원 단위까지 정확히
+  const moneyDetail = (v) => (v == null ? '–' : Math.abs(num(v) * MONEY_UNIT) < 1e6 ? fullWon(v) : won(v));
+  const fmtPct = (v, d) => (v == null || !isFinite(v) ? '–' : trimZero(v.toFixed(d)) + '%');
+
+  // '2026-09', '9', '9월' 등을 '9월'로
+  function monthLabel(m) {
+    const s = String(m ?? '').trim();
+    const ym = s.match(/^(\d{4})[-./](\d{1,2})/);
+    if (ym) return Number(ym[2]) + '월';
+    if (/^\d{1,2}$/.test(s)) return Number(s) + '월';
+    return s;
+  }
+
+  // ================= 지표 계산 =================
+  // CTR = 클릭÷노출×100, CPC = 광고비÷클릭, CPA = 광고비÷전환, ROAS = 매출÷광고비×100, CVR = 전환÷클릭×100
+  function withRates(r) {
+    return {
+      ...r,
+      ctr: r.impressions ? r.clicks / r.impressions * 100 : null,
+      cpc: r.clicks ? r.spend / r.clicks : null,
+      cpa: r.conversions ? r.spend / r.conversions : null,
+      roas: r.spend ? r.revenue / r.spend * 100 : null,
+      cvr: r.clicks ? r.conversions / r.clicks * 100 : null
+    };
+  }
+  function totals() {
+    const t = state.channel.reduce((a, r) => ({
+      spend: a.spend + r.spend, impressions: a.impressions + r.impressions, clicks: a.clicks + r.clicks,
+      conversions: a.conversions + r.conversions, revenue: a.revenue + r.revenue
+    }), { spend: 0, impressions: 0, clicks: 0, conversions: 0, revenue: 0 });
+    return withRates(t);
+  }
+  // 이번 달 예산: 월별 표의 마지막 달과 같은 달을 찾고, 없으면 가장 최근 줄
+  function currentBudget() {
+    const list = state.budget;
+    if (!list.length) return null;
+    const m = state.monthly;
+    const lastM = m.length ? String(m[m.length - 1].month).trim() : null;
+    return (lastM && list.find((x) => String(x.month).trim() === lastM)) || list[list.length - 1];
+  }
+
+  // ================= 오류를 알아보기 쉬운 말로 =================
+  const TABLES = ['marketing_channel', 'marketing_monthly', 'marketing_budget'];
+  function explain(table, err) {
+    const msg = String((err && (err.message || err)) || '');
+    const code = (err && err.code) || '';
+    const t = table ? `<b>${table}</b> ` : '';
+    let text;
+    if (code === '42703' || /column .*does not exist/i.test(msg)) {
+      text = `${t}테이블에 필요한 칸(컬럼)이 없거나 이름이 달라요.`;
+    } else if (code === 'PGRST205' || code === '42P01' || /could not find the table|does not exist/i.test(msg)) {
+      text = `${t}테이블을 찾지 못했어요. Supabase에서 테이블을 만드는 SQL을 먼저 실행해 주세요.`;
+    } else if (code === '42501' || /permission denied/i.test(msg)) {
+      text = `${t}테이블을 읽을 권한이 없어요. 읽기(SELECT) 권한과 RLS 정책을 확인해 주세요.`;
+    } else if (/invalid api key|jwt|apikey/i.test(msg)) {
+      text = 'Supabase 키가 맞지 않아요. 코드 위쪽 SUPABASE_KEY를 확인해 주세요.';
+    } else if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+      text = 'Supabase에 연결하지 못했어요. 인터넷 연결과 SUPABASE_URL 주소를 확인해 주세요.';
+    } else {
+      text = `${t}데이터를 읽는 중 문제가 생겼어요.`;
+    }
+    return `<div class="line">${text}<div class="msg">${esc((code ? code + ' · ' : '') + msg)}</div></div>`;
+  }
+
+  // ================= 데이터 불러오기 =================
+  async function load() {
+    const btn = $('refresh');
+    btn.disabled = true;
+    hideNotice();
+    try {
+      const results = await Promise.all([
+        db.from('marketing_channel').select('*'),
+        db.from('marketing_monthly').select('*').order('sort_order', { ascending: true }),
+        db.from('marketing_budget').select('*').order('month', { ascending: true })
+      ]);
+      const [c, m, b] = results;
+
+      const problems = [];
+      results.forEach((res, i) => { if (res.error) problems.push(explain(TABLES[i], res.error)); });
+
+      state.channel = c.error ? [] : (c.data || []).map((d) => ({
+        name: d.channel, spend: num(d.spend), impressions: num(d.impressions),
+        clicks: num(d.clicks), conversions: num(d.conversions), revenue: num(d.revenue)
+      }));
+      state.monthly = m.error ? [] : (m.data || []).map((d) => ({ month: d.month, spend: num(d.spend), roas: num(d.roas) }));
+      state.budget = b.error ? [] : (b.data || []).map((d) => ({
+        month: d.month, budget: num(d.budget), daysTotal: num(d.days_total), daysPassed: num(d.days_passed)
+      }));
+
+      renderAll();
+
+      if (problems.length) {
+        $('updated').textContent = problems.length === 3 ? '불러오기 실패' : '일부 데이터를 불러오지 못했어요';
+        showNotice('데이터를 불러오지 못했어요.', [...new Set(problems)].join(''));
+      } else {
+        $('updated').textContent = '마지막 업데이트 ' + new Date().toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        if (!state.channel.length && !state.monthly.length && !state.budget.length) {
+          showNotice('가져온 데이터가 없어요.', '<div class="line">테이블에 데이터가 있는데도 이렇게 보이면, 세 테이블에 읽기(SELECT) 허용 정책(RLS)이 있는지 확인해 주세요.</div>');
+        }
+      }
+    } catch (e) {
+      $('updated').textContent = '불러오기 실패';
+      showNotice('데이터를 불러오지 못했어요.', explain('', e));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showNotice(title, body) {
+    const n = $('notice');
+    n.innerHTML = `<b>${title}</b>${body}`;
+    n.style.display = 'block';
+  }
+  function hideNotice() { $('notice').style.display = 'none'; }
+
+  function renderAll() {
+    renderCards();
+    renderTable();
+    renderCombo();
+    renderPacing();
+  }
+
+  // ================= 1. 카드 =================
+  function renderCards() {
+    const t = totals();
+    const has = state.channel.length > 0;
+    const bud = currentBudget();
+    const m = state.monthly;
+
+    const monthName = bud ? monthLabel(bud.month) : (m.length ? monthLabel(m[m.length - 1].month) : '');
+    $('curMonth').textContent = monthName || '–';
+
+    // 이번 달 광고비 + 예산 소진율
+    $('spend').textContent = has ? won(t.spend) : '–';
+    $('spend').title = fullWon(t.spend);
+    if (bud && bud.budget) {
+      const burn = t.spend / bud.budget * 100;
+      $('burnBar').style.width = Math.min(burn, 100) + '%';
+      $('burnText').textContent = fmtPct(burn, 1);
+      $('budgetText').textContent = `예산 ${won(bud.budget)} 대비 소진율`;
+    } else {
+      $('burnBar').style.width = '0';
+      $('burnText').textContent = '–';
+      $('budgetText').textContent = '예산 데이터 없음';
+    }
+
+    // 통합 ROAS (지난달과 비교)
+    $('roas').textContent = has ? fmtPct(t.roas, 0) : '–';
+    const prev = m.length >= 2 ? m[m.length - 2] : null;
+    if (has && prev && t.roas != null) {
+      const d = t.roas - prev.roas;
+      $('roasSub').innerHTML = `지난달 ${fmtPct(prev.roas, 0)} 대비 <b class="${d >= 0 ? 'accent' : ''}">${d >= 0 ? '▲' : '▼'} ${Math.round(Math.abs(d))}%p</b>`;
+    } else {
+      $('roasSub').innerHTML = has ? `광고 매출 <b>${won(t.revenue)}</b>` : '&nbsp;';
+    }
+
+    // CAC
+    $('cac').textContent = has ? moneyDetail(t.cpa) : '–';
+    $('cacSub').textContent = has ? `광고비 ÷ 전환 ${count(t.conversions)}건` : ' ';
+
+    // 전환수 + CVR
+    $('conv').textContent = has ? count(t.conversions) + '건' : '–';
+    $('convSub').innerHTML = has ? `CVR <b>${fmtPct(t.cvr, 2)}</b> · 클릭 ${count(t.clicks)}회 중` : '&nbsp;';
+  }
+
+  // ================= 2. 채널별 성과 표 =================
+  const COLS = [
+    { key: 'name', label: '채널', fmt: (r) => esc(r.name) },
+    { key: 'spend', label: '광고비', fmt: (r) => won(r.spend) },
+    { key: 'impressions', label: '노출', fmt: (r) => count(r.impressions) },
+    { key: 'clicks', label: '클릭', fmt: (r) => count(r.clicks) },
+    { key: 'ctr', label: 'CTR', fmt: (r) => fmtPct(r.ctr, 2) },
+    { key: 'cpc', label: 'CPC', fmt: (r) => moneyDetail(r.cpc) },
+    { key: 'conversions', label: '전환', fmt: (r) => count(r.conversions) },
+    { key: 'cpa', label: 'CPA', fmt: (r) => moneyDetail(r.cpa) },
+    { key: 'roas', label: 'ROAS' }
+  ];
+  let sortKey = 'spend', sortDir = -1;   // 기본: 광고비 많은 순
+
+  function renderTable() {
+    const box = $('channelTable');
+    if (!state.channel.length) { box.innerHTML = placeholder(); return; }
+
+    const rows = state.channel.map(withRates);
+    const t = totals();
+    rows.sort((a, b) => {
+      const x = a[sortKey], y = b[sortKey];
+      if (sortKey === 'name') return String(x).localeCompare(String(y), 'ko') * sortDir;
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      return (x - y) * sortDir;
+    });
+
+    const roasVals = rows.map((r) => r.roas).filter((v) => v != null);
+    const scale = Math.max(...roasVals, t.roas || 0, 100) * 1.05;
+    const best = roasVals.length ? Math.max(...roasVals) : null;
+    const roasCell = (v, cls) => {
+      const w = v == null ? 0 : Math.min(v / scale * 100, 100);
+      return `<span class="roas-cell"><span class="roas-val">${fmtPct(v, 0)}</span>`
+        + `<span class="roas-track"><span class="${cls}" style="width:${w}%"></span><i style="left:${100 / scale * 100}%"></i></span></span>`;
+    };
+
+    let h = '<table class="ch"><thead><tr>';
+    COLS.forEach((c) => {
+      const active = c.key === sortKey;
+      h += `<th class="${active ? 'active' : ''}" aria-sort="${active ? (sortDir < 0 ? 'descending' : 'ascending') : 'none'}">`
+        + `<button type="button" class="sort" data-key="${c.key}">${c.label}<span class="arrow">${active ? (sortDir < 0 ? '▼' : '▲') : ''}</span></button></th>`;
+    });
+    h += '</tr></thead><tbody>';
+    rows.forEach((r) => {
+      h += '<tr>';
+      COLS.forEach((c) => {
+        if (c.key === 'roas') h += `<td>${roasCell(r.roas, r.roas != null && r.roas === best ? 'best' : '')}</td>`;
+        else h += `<td${c.key === 'name' ? ' class="name"' : ''}>${c.fmt(r)}</td>`;
+      });
+      h += '</tr>';
+    });
+    h += '</tbody><tfoot><tr>';
+    COLS.forEach((c) => {
+      if (c.key === 'name') h += '<td>합계 · 평균</td>';
+      else if (c.key === 'roas') h += `<td>${roasCell(t.roas, 'total')}</td>`;
+      else h += `<td>${c.fmt(t)}</td>`;
+    });
+    h += '</tr></tfoot></table>';
+    box.innerHTML = h;
+  }
+
+  // 표 제목 눌러서 정렬
+  $('channelTable').addEventListener('click', (e) => {
+    const b = e.target.closest('.sort');
+    if (!b) return;
+    const k = b.dataset.key;
+    if (k === sortKey) sortDir *= -1;
+    else { sortKey = k; sortDir = k === 'name' ? 1 : -1; }
+    renderTable();
+  });
+
+  // ================= 3. 광고비 막대 + ROAS 선 =================
+  function niceStep(raw) {
+    if (raw <= 0) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw / p;
+    const steps = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+    return steps.find((s) => n <= s) * p;
+  }
+  function barPath(x, y, w, h, r) {
+    if (h <= 0) return '';
+    r = Math.min(r, w / 2, h);
+    return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+  }
+
+  let comboWidth = 0;
+  function renderCombo() {
+    const box = $('combo');
+    const rows = state.monthly;
+    if (!rows.length) { box.innerHTML = placeholder(); return; }
+
+    const W = Math.max(box.clientWidth, 260);
+    comboWidth = box.clientWidth;
+    const H = W < 480 ? 240 : 290;
+    const pad = { top: 28, right: 46, bottom: 30, left: 50 };
+    const iw = W - pad.left - pad.right;
+    const ih = H - pad.top - pad.bottom;
+
+    // 왼쪽 축 = 광고비, 오른쪽 축 = ROAS (눈금선 4칸 공유)
+    const TICKS = 4;
+    const stepL = niceStep(Math.max(...rows.map((r) => r.spend), 1) * 1.08 / TICKS);
+    const stepR = niceStep(Math.max(...rows.map((r) => r.roas), 100) * 1.12 / TICKS);
+    const yL = (v) => pad.top + ih - (v / (stepL * TICKS)) * ih;
+    const yR = (v) => pad.top + ih - (v / (stepR * TICKS)) * ih;
+
+    const n = rows.length;
+    const slot = iw / n;
+    const bw = Math.min(slot * 0.5, 40);
+    const lastIdx = n - 1;
+    const showAll = slot >= 54;
+    const labelEvery = Math.max(1, Math.ceil(30 / slot));
+    const cxOf = (i) => pad.left + slot * i + slot / 2;
+
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 광고비와 ROAS 그래프">`;
+
+    for (let i = 0; i <= TICKS; i++) {
+      const yy = pad.top + ih - (ih * i) / TICKS;
+      s += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${yy}" y2="${yy}" stroke="${i === 0 ? '#d3d7dc' : '#eef0f2'}"/>`;
+      s += `<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#9aa0a6">${money(stepL * i)}</text>`;
+      s += `<text x="${W - pad.right + 8}" y="${yy + 4}" text-anchor="start" font-size="11" fill="#9aa0a6">${trimZero(String(Math.round(stepR * i * 10) / 10))}%</text>`;
+    }
+
+    // 광고비 막대
+    rows.forEach((r, i) => {
+      const cx = cxOf(i);
+      const top = yL(r.spend);
+      const isCur = i === lastIdx;
+      s += `<path d="${barPath(cx - bw / 2, top, bw, pad.top + ih - top, 3)}" fill="${isCur ? ORANGE : BAR}"><title>${esc(monthLabel(r.month))} 광고비 ${fullWon(r.spend)} · ROAS ${fmtPct(r.roas, 0)}</title></path>`;
+      if ((lastIdx - i) % labelEvery === 0) {
+        s += `<text x="${cx}" y="${H - 9}" text-anchor="middle" font-size="12" font-weight="${isCur ? 800 : 400}" fill="${isCur ? INK : '#6b7178'}">${esc(monthLabel(r.month))}</text>`;
+      }
+    });
+
+    // ROAS 선
+    const pts = rows.map((r, i) => [cxOf(i), yR(r.roas)]);
+    s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ',' + p[1]).join('')}" fill="none" stroke="${INK}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach((p, i) => {
+      const isCur = i === lastIdx;
+      s += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${isCur ? INK : '#fff'}" stroke="${INK}" stroke-width="2"><title>${esc(monthLabel(rows[i].month))} ROAS ${fmtPct(rows[i].roas, 0)}</title></circle>`;
+      if (showAll || isCur) {
+        s += `<text x="${p[0]}" y="${p[1] - 10}" text-anchor="middle" font-size="11" font-weight="${isCur ? 800 : 600}" fill="${INK}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${fmtPct(rows[i].roas, 0)}</text>`;
+      }
+    });
+
+    s += '</svg>';
+    box.innerHTML = s;
+  }
+
+  // ================= 4. 예산 소진 페이싱 =================
+  function renderPacing() {
+    const box = $('pacing');
+    const bud = currentBudget();
+    if (!bud || !bud.budget) { box.innerHTML = placeholder('예산 데이터가 없어요'); return; }
+
+    const spent = totals().spend;
+    const burn = spent / bud.budget * 100;
+    const elapsed = bud.daysTotal ? bud.daysPassed / bud.daysTotal * 100 : 0;
+    const diff = burn - elapsed;
+    const remain = bud.budget - spent;
+    const daily = bud.daysPassed > 0 ? spent / bud.daysPassed : 0;
+
+    // 경과 대비 속도
+    let speed;
+    if (Math.abs(diff) < 1) speed = '기간 경과와 <b>비슷한 속도</b>로 소진 중';
+    else speed = `기간 경과보다 <b>${trimZero(Math.abs(diff).toFixed(1))}%p ${diff > 0 ? '빠르게' : '느리게'}</b> 소진 중`;
+
+    // 이 속도면 며칠째에 바닥나는지
+    let forecast;
+    if (spent >= bud.budget) {
+      forecast = remain < 0 ? `예산을 이미 다 썼어요. <b>${won(-remain)}</b> 초과 집행 중이에요.` : '예산을 이미 다 썼어요.';
+    } else if (daily <= 0) {
+      forecast = '아직 집행 기록이 없어서 소진 시점을 계산할 수 없어요.';
+    } else {
+      const day = Math.ceil(bud.budget / daily);
+      if (!bud.daysTotal) forecast = `이 속도면 <b>${day}일째</b>에 예산이 바닥나요.`;
+      else if (day < bud.daysTotal) forecast = `이 속도면 <b>${day}일째</b>에 예산이 바닥나요. 기간이 끝나기 ${bud.daysTotal - day}일 전이에요.`;
+      else if (day === bud.daysTotal) forecast = `이 속도면 마지막 날인 <b>${day}일째</b>에 예산을 딱 맞게 다 써요.`;
+      else forecast = `이 속도면 <b>${day}일째</b>에 바닥나요. ${bud.daysTotal}일 기간이 먼저 끝나서 약 <b>${won(bud.budget - daily * bud.daysTotal)}</b>이 남아요.`;
+    }
+
+    box.innerHTML = `
+      <div class="pace-row">
+        <div class="pace-head"><span>예산 소진</span><b class="o">${fmtPct(burn, 1)}</b></div>
+        <div class="pace-track"><span class="burn" style="width:${Math.min(burn, 100)}%"></span><i class="mark" style="left:${Math.min(elapsed, 100)}%"></i></div>
+        <div class="pace-note">세로선은 오늘까지의 기간 경과 위치예요</div>
+      </div>
+      <div class="pace-row">
+        <div class="pace-head"><span>기간 경과</span><b>${fmtPct(elapsed, 1)}</b></div>
+        <div class="pace-track"><span class="time" style="width:${Math.min(elapsed, 100)}%"></span></div>
+        <div class="pace-note">${count(bud.daysTotal)}일 중 ${count(bud.daysPassed)}일 지남</div>
+      </div>
+      <div class="pace-msg">
+        <p class="speed">${speed}</p>
+        <p class="forecast">${forecast}</p>
+      </div>
+      <div class="pace-stats">
+        <div><span>집행</span><b>${won(spent)}</b></div>
+        <div><span>잔여</span><b>${remain >= 0 ? won(remain) : '-' + won(-remain)}</b></div>
+        <div><span>일 평균</span><b>${daily ? moneyDetail(daily) : '–'}</b></div>
+      </div>`;
+  }
+
+  // ================= 시작 =================
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (state.monthly.length && $('combo').clientWidth !== comboWidth) renderCombo();
+    }, 150);
+  });
+  $('refresh').addEventListener('click', load);
+  load();
+</script>
+</body>
+</html>

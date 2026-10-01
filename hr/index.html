@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABOS 인사 대시보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  /* ================= ABOS 로고에서 뽑은 색 ================= */
+  :root {
+    --ink: #1b1e22;          /* 로고 배경 차콜 */
+    --steel-dark: #4b5259;   /* 진한 철제 회색 */
+    --silver: #c9ced4;       /* 로고 은색 판 */
+    --orange: #ff4500;       /* 로고 화살표 오렌지 */
+    --orange-text: #d63a00;  /* 흰 바탕 위 오렌지 글씨 */
+    --red: #dc2626;          /* 기준 초과 경고 */
+    --page: #f3f4f6;
+    --text: #1b1e22;
+    --sub: #6b7178;
+    --faint: #9aa0a6;
+    --line: #e3e6ea;
+    --track: #eceef1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--page);
+    color: var(--text);
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-feature-settings: "tnum";
+    line-height: 1.45;
+    word-break: keep-all;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ================= 상단 브랜드 바 ================= */
+  .topbar { background: var(--ink); border-bottom: 3px solid var(--orange); color: #fff; }
+  .topbar-inner {
+    max-width: 1200px; margin: 0 auto; padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .mark { width: 42px; height: 42px; display: block; flex-shrink: 0; border-radius: 2px; }
+  .brand-name { font-size: 24px; font-weight: 900; letter-spacing: 0.02em; line-height: 1; }
+  .brand-tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.18em; color: #b9c1ca; margin-top: 6px; white-space: nowrap; }
+  .btn {
+    flex-shrink: 0; border: 1px solid rgba(255,255,255,.3); background: transparent; color: #fff;
+    font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--orange); background: rgba(255,69,0,.14); }
+  .btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px 56px; }
+  .page-head {
+    display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap;
+    gap: 4px 12px; margin: 28px 0 18px;
+  }
+  h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
+  .updated { font-size: 13px; color: var(--sub); }
+
+  .notice {
+    display: none; border: 1px solid var(--line); border-left: 3px solid var(--orange);
+    background: #fff; border-radius: 8px; padding: 14px 16px; font-size: 14px; margin-bottom: 14px;
+  }
+  .notice .line { margin-top: 8px; }
+  .notice .msg { margin-top: 2px; font-size: 12px; color: var(--sub); word-break: break-all; }
+
+  /* ================= 카드 4개 ================= */
+  .cards { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .card, .panel { border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 0; background: #fff; }
+  .card-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--sub); }
+  .card-value {
+    font-size: 26px; font-weight: 800; letter-spacing: -0.03em; margin-top: 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-value.neg { color: var(--red); }
+  .card-sub { font-size: 13px; color: var(--sub); margin-top: 6px; }
+  .card-sub b { color: var(--text); font-weight: 700; }
+  .card-sub b.accent { color: var(--orange-text); }
+  .card-sub b.neg { color: var(--red); }
+  .card-note { font-size: 11px; color: var(--faint); margin-top: 6px; }
+
+  /* 기준선이 있는 작은 막대 */
+  .mini-track { position: relative; height: 6px; background: var(--track); border-radius: 999px; margin-top: 14px; }
+  .mini-track span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--orange); transition: width .8s ease; }
+  .mini-track span.bad { background: var(--red); }
+  .mini-track i { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); }
+  .mini-cap { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); margin-top: 6px; }
+
+  /* 재직 인원 카드: 차콜 + 화살표 무늬 */
+  .card.main {
+    position: relative; overflow: hidden; color: #fff;
+    background: linear-gradient(135deg, #2b3036 0%, var(--ink) 65%); border-color: var(--ink);
+  }
+  .card.main .wm { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); height: 150px; pointer-events: none; }
+  .card.main > *:not(.wm) { position: relative; }
+  .card.main .card-label { color: rgba(255,255,255,.7); }
+  .tag { font-size: 11px; font-weight: 700; color: #fff; background: var(--orange); padding: 1px 8px; border-radius: 4px; }
+  .card.main .card-value { font-size: 42px; line-height: 1.15; margin-top: 8px; }
+  .main-stats { display: flex; gap: 22px; margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+  .main-stats span { display: block; font-size: 12px; color: rgba(255,255,255,.6); }
+  .main-stats b { font-size: 16px; font-weight: 800; }
+  .main-stats b.up { color: var(--orange); }
+
+  /* ================= 패널 ================= */
+  .row { display: grid; gap: 14px; margin-bottom: 14px; }
+  .row.top { grid-template-columns: 3fr 2fr; }
+  .row.bottom { grid-template-columns: 1fr 1fr; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 18px; }
+  .panel h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+  .hint { font-size: 12px; color: var(--sub); }
+  .hint b { color: var(--text); }
+  .hint b.neg { color: var(--red); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--sub); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .lg-box { width: 10px; height: 10px; border-radius: 2px; background: var(--silver); }
+  .lg-box.now { background: var(--orange); }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .placeholder { color: var(--faint); font-size: 14px; padding: 40px 0; text-align: center; }
+  .scale { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--sub); }
+  .scale i { display: block; width: 90px; height: 8px; border-radius: 2px; background: linear-gradient(90deg, rgba(27,30,34,.06), rgba(27,30,34,.9)); }
+
+  /* ================= 도넛 ================= */
+  .donut-wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .donut { width: 180px; height: 180px; flex-shrink: 0; margin: 0 auto; }
+  .donut svg { display: block; }
+  .mix { flex: 1; min-width: 200px; }
+  .mix-item { display: grid; grid-template-columns: 10px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f1f3; }
+  .mix-item i { width: 10px; height: 10px; border-radius: 2px; }
+  .mix-item .nm { font-size: 14px; font-weight: 600; }
+  .mix-item .ct { font-size: 13px; color: var(--sub); }
+  .mix-item .pc { font-size: 15px; font-weight: 800; text-align: right; min-width: 48px; }
+  .stat-box { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; padding: 12px 14px; background: var(--ink); color: #fff; border-radius: 8px; }
+  .stat-box span { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.75); }
+  .stat-box small { display: block; font-size: 11px; font-weight: 500; color: rgba(255,255,255,.55); margin-top: 2px; }
+  .stat-box b { font-size: 22px; font-weight: 800; color: var(--orange); white-space: nowrap; }
+
+  /* ================= 부서별 표 ================= */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.dept { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  .dept th { text-align: left; font-size: 12px; font-weight: 600; color: var(--sub); padding: 0 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .dept td { padding: 12px 8px; border-bottom: 1px solid #f0f1f3; white-space: nowrap; }
+  .dept th:first-child, .dept td:first-child { padding-left: 0; }
+  .dept .r { text-align: right; }
+  .dept td.nm { font-weight: 700; }
+  .dept td.amt { font-weight: 700; }
+  .dept td.barcell { width: 42%; min-width: 80px; }
+  .dbar { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .dbar span { display: block; height: 100%; background: var(--silver); border-radius: 999px; }
+  .dept tbody tr:first-child .dbar span { background: var(--steel-dark); }
+  .dept tfoot td { font-weight: 800; border-top: 2px solid var(--ink); border-bottom: none; background: #f6f7f8; }
+  .dept tfoot td:first-child { padding-left: 10px; }
+
+  /* ================= 초과근무 표 ================= */
+  table.ot { width: 100%; min-width: 440px; table-layout: fixed; border-collapse: separate; border-spacing: 4px; font-size: 13px; margin: -4px; }
+  .ot th:first-child { width: 96px; }
+  .ot th { font-size: 12px; font-weight: 600; color: var(--sub); padding: 0 4px 6px; text-align: center; white-space: nowrap; }
+  .ot th.warn { color: var(--red); }
+  .ot th:first-child, .ot td.d { text-align: left; }
+  .ot td.d { font-weight: 700; padding-right: 10px; white-space: nowrap; }
+  .ot td.c { height: 40px; text-align: center; border-radius: 4px; font-weight: 700; }
+  .ot td.zero { color: var(--faint); font-weight: 500; }
+  .ot td.empty { background: #f4f5f6; }
+
+  /* ================= 화면 크기별 ================= */
+  @media (max-width: 960px) {
+    .cards { grid-template-columns: repeat(3, 1fr); }
+    .card.main { grid-column: 1 / -1; }
+  }
+  @media (max-width: 860px) {
+    .row.top, .row.bottom { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .topbar-inner { padding: 12px 14px; }
+    .brand { gap: 10px; }
+    .mark { width: 36px; height: 36px; }
+    .brand-name { font-size: 21px; }
+    .brand-tag { font-size: 9.5px; letter-spacing: 0.12em; }
+    .btn { padding: 7px 13px; }
+    .wrap { padding: 0 14px 40px; }
+    .page-head { margin: 20px 0 14px; }
+    h1 { font-size: 20px; }
+    .cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .card.wide { grid-column: 1 / -1; }
+    .row { gap: 10px; margin-bottom: 10px; }
+    .card, .panel { padding: 16px; }
+    .card-value { font-size: 21px; }
+    .card.main .card-value { font-size: 34px; }
+    .card.main .wm { height: 120px; }
+    .main-stats { gap: 16px; }
+    .donut-wrap { gap: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-track span { transition: none; }
+  }
+
+  /* 경영 대시보드로 돌아가기 */
+  a.brand { text-decoration: none; color: inherit; }
+  .back {
+    display: inline-flex; align-items: center; gap: 4px; margin-bottom: 6px;
+    font-size: 13px; font-weight: 600; color: var(--sub); text-decoration: none;
+  }
+  .back:hover { color: var(--orange-text); }
+  .back:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 2px; }
+</style>
+<script>
+  // 스크립트가 아예 멈췄을 때(예: Supabase 도구를 못 불러옴) 이유를 화면에 보여주기
+  window.addEventListener('error', function (e) {
+    var n = document.getElementById('notice');
+    if (!n) return;
+    var noLib = typeof window.supabase === 'undefined';
+    n.innerHTML = '<b>' + (noLib ? 'Supabase 도구를 불러오지 못했어요.' : '화면을 그리다 오류가 났어요.') + '</b>'
+      + (noLib ? '<br>인터넷 연결을 확인하고 새로고침해 주세요.' : '') + '<div class="msg"></div>';
+    n.querySelector('.msg').textContent = e.message || '';
+    n.style.display = 'block';
+    var u = document.getElementById('updated');
+    if (u) u.textContent = '불러오기 실패';
+  });
+</script>
+</head>
+<body>
+
+<!-- 상단 브랜드 바 (로고 이미지는 파일 안에 들어 있음) -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="../index.html" title="경영 대시보드로">
+      <img class="mark" id="logo" alt="ABOS 로고" src="data:image/png;base64,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">
+      <div>
+        <div class="brand-name">ABOS</div>
+        <div class="brand-tag">ALL BAEK ONE-STOP SOLUTION</div>
+      </div>
+    </a>
+    <button class="btn" id="refresh" type="button">새로고침</button>
+  </div>
+</header>
+<script>
+  // 브라우저 탭 아이콘도 로고로
+  (function () {
+    var l = document.createElement('link');
+    l.rel = 'icon';
+    l.href = document.getElementById('logo').src;
+    document.head.appendChild(l);
+  })();
+</script>
+
+<main class="wrap">
+
+  <div class="page-head">
+    <div>
+      <a class="back" href="../index.html">← 경영 대시보드</a>
+      <h1>인사 대시보드</h1>
+    </div>
+    <p class="updated" id="updated">데이터 불러오는 중…</p>
+  </div>
+
+  <div class="notice" id="notice"></div>
+
+  <!-- 1. 카드 4개 -->
+  <section class="cards">
+    <div class="card main">
+      <svg class="wm" viewBox="0 0 100 80" aria-hidden="true">
+        <defs>
+          <linearGradient id="wmg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#c9ced4" stop-opacity=".16"/>
+            <stop offset="1" stop-color="#c9ced4" stop-opacity=".05"/>
+          </linearGradient>
+        </defs>
+        <polygon points="0,0 16,0 36,40 16,80 0,80 20,40" fill="url(#wmg)"/>
+        <polygon points="30,0 46,0 66,40 46,80 30,80 50,40" fill="url(#wmg)"/>
+        <polygon points="60,0 76,0 96,40 76,80 60,80 80,40" fill="url(#wmg)"/>
+      </svg>
+      <div class="card-label">재직 인원 <span class="tag" id="curMonth">–</span></div>
+      <div class="card-value" id="hc">–</div>
+      <div class="main-stats">
+        <div><span>이번 달 입사</span><b id="joined">–</b></div>
+        <div><span>이번 달 퇴사</span><b id="left">–</b></div>
+        <div><span>전월 대비</span><b id="hcDelta">–</b></div>
+      </div>
+    </div>
+    <div class="card wide">
+      <div class="card-label">인건비 비중</div>
+      <div class="card-value" id="ratio">–</div>
+      <div class="card-sub" id="ratioSub">&nbsp;</div>
+      <div class="mini-track" id="ratioTrack"><span></span><i></i></div>
+      <div class="mini-cap"><span>인건비 ÷ 매출</span><span id="ratioCap"></span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">이직률</div>
+      <div class="card-value" id="turn">–</div>
+      <div class="card-sub" id="turnSub">&nbsp;</div>
+      <div class="mini-track" id="turnTrack"><span></span><i></i></div>
+      <div class="mini-cap"><span id="turnBasis">최근 12개월</span><span id="turnCap"></span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">1인당 매출</div>
+      <div class="card-value" id="rpp">–</div>
+      <div class="card-sub" id="rppSub">&nbsp;</div>
+      <div class="card-note">매출 ÷ 재직 인원</div>
+    </div>
+  </section>
+
+  <!-- 2, 3. 월별 재직 인원 / 근속 분포 -->
+  <section class="row top">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>월별 재직 인원</h2>
+        <div class="legend">
+          <span><i class="lg-box now"></i>이번 달</span>
+          <span><i class="lg-box"></i>지난 달</span>
+        </div>
+      </div>
+      <div class="chart" id="hcChart"><div class="placeholder">불러오는 중…</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>근속 분포</h2></div>
+      <div id="tenure"><div class="placeholder">불러오는 중…</div></div>
+    </div>
+  </section>
+
+  <!-- 4, 5. 부서별 / 초과근무 -->
+  <section class="row bottom">
+    <div class="panel">
+      <div class="panel-head"><h2>부서별 인건비</h2></div>
+      <div class="table-wrap" id="dept"><div class="placeholder">불러오는 중…</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>부서별 초과근무</h2>
+        <span class="hint" id="otHint"></span>
+      </div>
+      <div class="table-wrap" id="overtime"><div class="placeholder">불러오는 중…</div></div>
+      <div class="scale" style="margin-top:12px">적음 <i></i> 많음 · 숫자 = 해당 구간 인원(명)</div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ================= 연결 정보 =================
+  const SUPABASE_URL = 'https://rslrkmfbywfmednotfta.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzbHJrbWZieXdmbWVkbm90ZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NjQ2MTksImV4cCI6MjEwNjM0MDYxOX0.9rv7w5HVHo0PymE48kwoyjTsqpC2xmXJB5u5E0ic7Ps';
+
+  // ================= 직접 바꿔 쓰는 설정 =================
+  const PAYROLL_LIMIT = 35;    // 인건비 비중 기준선 (%) — 이 이하면 정상
+  const TURNOVER_TARGET = 12;  // 이직률 목표 (%) — 이 이하면 정상
+  const MONEY_UNIT = 1;        // DB 금액이 '원' 단위면 1, '천원' 1000, '만원' 10000
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ================= 공통 도구 =================
+  const ORANGE = '#ff4500';
+  const INK = '#1b1e22';
+  const SILVER = '#c9ced4';
+  const state = { monthly: [], dept: [], tenure: [], overtime: [] };
+
+  const $ = (id) => document.getElementById(id);
+  const num = (v) => Number(v) || 0;
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const trimZero = (s) => (s.includes('.') ? s.replace(/\.?0+$/, '') : s);
+  const placeholder = (t) => `<div class="placeholder">${t || '표시할 데이터가 없어요'}</div>`;
+  const count = (v) => Math.round(num(v)).toLocaleString('ko-KR');
+  const fmtPct = (v, d) => (v == null || !isFinite(v) ? '–' : trimZero(Number(v).toFixed(d)) + '%');
+
+  function money(v) {
+    const w = num(v) * MONEY_UNIT;
+    const a = Math.abs(w);
+    if (a >= 1e8) return trimZero((w / 1e8).toFixed(a >= 1e10 ? 0 : a >= 1e9 ? 1 : 2)) + '억';
+    if (a >= 1e4) return Math.round(w / 1e4).toLocaleString('ko-KR') + '만';
+    return Math.round(w).toLocaleString('ko-KR');
+  }
+  const won = (v) => money(v) + '원';
+  const fullWon = (v) => Math.round(num(v) * MONEY_UNIT).toLocaleString('ko-KR') + '원';
+
+  function monthLabel(m) {
+    const s = String(m ?? '').trim();
+    const ym = s.match(/^(\d{4})[-./](\d{1,2})/);
+    if (ym) return Number(ym[2]) + '월';
+    if (/^\d{1,2}$/.test(s)) return Number(s) + '월';
+    return s;
+  }
+
+  // 초과근무 구간: '0h', '1-10', '30h+' 등을 같은 칸으로 맞추기
+  const OT_COLS = [
+    { key: '0', label: '0h' }, { key: '1-10', label: '1-10' }, { key: '11-20', label: '11-20' },
+    { key: '21-30', label: '21-30' }, { key: '30+', label: '30h+' }
+  ];
+  const otKey = (b) => String(b ?? '').replace(/\s|시간/g, '').replace(/h/gi, '').replace(/~/g, '-');
+
+  // ================= 인사 계산 =================
+  // 인건비 비중 = 인건비 ÷ 매출 × 100, 1인당 매출 = 매출 ÷ 재직 인원
+  // 이직률 = 최근 12개월 퇴사 합계 ÷ 평균 인원 × 100
+  function turnover() {
+    const rows = state.monthly.slice(-12);
+    if (!rows.length) return null;
+    const left = rows.reduce((a, r) => a + r.left, 0);
+    const avg = rows.reduce((a, r) => a + r.headcount, 0) / rows.length;
+    return { rate: avg ? left / avg * 100 : null, left, avg, months: rows.length };
+  }
+
+  // ================= 오류를 알아보기 쉬운 말로 =================
+  const TABLES = ['hr_monthly', 'hr_dept', 'hr_tenure', 'hr_overtime'];
+  function explain(table, err) {
+    const msg = String((err && (err.message || err)) || '');
+    const code = (err && err.code) || '';
+    const t = table ? `<b>${table}</b> ` : '';
+    let text;
+    if (code === '42703' || /column .*does not exist/i.test(msg)) {
+      text = `${t}테이블에 필요한 칸(컬럼)이 없거나 이름이 달라요.`;
+    } else if (code === 'PGRST205' || code === '42P01' || /could not find the table|does not exist/i.test(msg)) {
+      text = `${t}테이블을 찾지 못했어요. Supabase에서 테이블을 만드는 SQL을 먼저 실행해 주세요.`;
+    } else if (code === '42501' || /permission denied/i.test(msg)) {
+      text = `${t}테이블을 읽을 권한이 없어요. 읽기(SELECT) 권한과 RLS 정책을 확인해 주세요.`;
+    } else if (/invalid api key|jwt|apikey/i.test(msg)) {
+      text = 'Supabase 키가 맞지 않아요. 코드 위쪽 SUPABASE_KEY를 확인해 주세요.';
+    } else if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+      text = 'Supabase에 연결하지 못했어요. 인터넷 연결과 SUPABASE_URL 주소를 확인해 주세요.';
+    } else {
+      text = `${t}데이터를 읽는 중 문제가 생겼어요.`;
+    }
+    return `<div class="line">${text}<div class="msg">${esc((code ? code + ' · ' : '') + msg)}</div></div>`;
+  }
+
+  // ================= 데이터 불러오기 =================
+  async function load() {
+    const btn = $('refresh');
+    btn.disabled = true;
+    hideNotice();
+    try {
+      const results = await Promise.all([
+        db.from('hr_monthly').select('*').order('sort_order', { ascending: true }),
+        db.from('hr_dept').select('*'),
+        db.from('hr_tenure').select('*').order('sort_order', { ascending: true }),
+        db.from('hr_overtime').select('*')
+      ]);
+      const [m, d, t, o] = results;
+
+      const problems = [];
+      results.forEach((res, i) => { if (res.error) problems.push(explain(TABLES[i], res.error)); });
+
+      state.monthly = m.error ? [] : (m.data || []).map((x) => ({
+        month: x.month, headcount: num(x.headcount), payroll: num(x.payroll),
+        joined: num(x.joined), left: num(x.left_count), revenue: num(x.revenue)
+      }));
+      state.dept = d.error ? [] : (d.data || []).map((x) => ({ dept: x.dept, headcount: num(x.headcount), payroll: num(x.payroll) }));
+      state.tenure = t.error ? [] : (t.data || []).map((x) => ({ bucket: x.bucket, count: num(x.count) }));
+      state.overtime = o.error ? [] : (o.data || []).map((x) => ({ dept: x.dept, key: otKey(x.bucket), label: x.bucket, count: num(x.count) }));
+
+      renderAll();
+
+      if (problems.length) {
+        $('updated').textContent = problems.length === TABLES.length ? '불러오기 실패' : '일부 데이터를 불러오지 못했어요';
+        showNotice('데이터를 불러오지 못했어요.', [...new Set(problems)].join(''));
+      } else {
+        $('updated').textContent = '마지막 업데이트 ' + new Date().toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        if (!state.monthly.length && !state.dept.length && !state.tenure.length && !state.overtime.length) {
+          showNotice('가져온 데이터가 없어요.', '<div class="line">테이블에 데이터가 있는데도 이렇게 보이면, 테이블에 읽기(SELECT) 허용 정책(RLS)이 있는지 확인해 주세요.</div>');
+        }
+      }
+    } catch (e) {
+      $('updated').textContent = '불러오기 실패';
+      showNotice('데이터를 불러오지 못했어요.', explain('', e));
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showNotice(title, body) {
+    const n = $('notice');
+    n.innerHTML = `<b>${title}</b>${body}`;
+    n.style.display = 'block';
+  }
+  function hideNotice() { $('notice').style.display = 'none'; }
+
+  function renderAll() {
+    renderCards();
+    renderHeadcount();
+    renderTenure();
+    renderDept();
+    renderOvertime();
+  }
+
+  // 기준선 막대 그리기 (value가 limit 이하면 주황, 넘으면 빨강)
+  function setTrack(id, value, limit) {
+    const tr = $(id);
+    const scale = Math.max(limit * 2, (value || 0) * 1.15);
+    const fill = tr.querySelector('span');
+    fill.style.width = (value == null ? 0 : Math.min(value / scale * 100, 100)) + '%';
+    fill.className = value != null && value > limit ? 'bad' : '';
+    tr.querySelector('i').style.left = (limit / scale * 100) + '%';
+  }
+
+  // ================= 1. 카드 =================
+  function renderCards() {
+    const m = state.monthly;
+    const cur = m[m.length - 1];
+    const prev = m.length >= 2 ? m[m.length - 2] : null;
+
+    if (!cur) {
+      ['curMonth', 'hc', 'joined', 'left', 'hcDelta', 'ratio', 'turn', 'rpp'].forEach((id) => ($(id).textContent = '–'));
+      $('ratioSub').textContent = '월별 인사 데이터 없음';
+      return;
+    }
+
+    // 재직 인원 + 이번 달 입사·퇴사
+    $('curMonth').textContent = monthLabel(cur.month);
+    $('hc').textContent = count(cur.headcount) + '명';
+    $('joined').textContent = '+' + count(cur.joined) + '명';
+    $('left').textContent = count(cur.left) + '명';
+    if (prev) {
+      const d = cur.headcount - prev.headcount;
+      $('hcDelta').textContent = (d > 0 ? '+' : '') + count(d) + '명';
+      $('hcDelta').className = d > 0 ? 'up' : '';
+    } else $('hcDelta').textContent = '–';
+
+    // 인건비 비중 + 기준선
+    const ratio = cur.revenue ? cur.payroll / cur.revenue * 100 : null;
+    $('ratio').textContent = fmtPct(ratio, 1);
+    $('ratio').className = 'card-value' + (ratio != null && ratio > PAYROLL_LIMIT ? ' neg' : '');
+    if (ratio != null) {
+      const gap = ratio - PAYROLL_LIMIT;
+      $('ratioSub').innerHTML = gap <= 0
+        ? `<b class="accent">기준 ${PAYROLL_LIMIT}% 이하</b> · 여유 ${trimZero(Math.abs(gap).toFixed(1))}%p`
+        : `<b class="neg">기준 ${PAYROLL_LIMIT}% 초과</b> · +${trimZero(gap.toFixed(1))}%p`;
+    } else $('ratioSub').textContent = '매출 데이터가 없어요';
+    setTrack('ratioTrack', ratio, PAYROLL_LIMIT);
+    $('ratioCap').textContent = `│ 기준 ${PAYROLL_LIMIT}%`;
+
+    // 이직률 + 목표
+    const to = turnover();
+    $('turn').textContent = to ? fmtPct(to.rate, 1) : '–';
+    $('turn').className = 'card-value' + (to && to.rate > TURNOVER_TARGET ? ' neg' : '');
+    if (to && to.rate != null) {
+      $('turnSub').innerHTML = to.rate > TURNOVER_TARGET
+        ? `<b class="neg">목표 ${TURNOVER_TARGET}% 초과</b> · 퇴사 ${count(to.left)}명`
+        : `<b class="accent">목표 ${TURNOVER_TARGET}% 이내</b> · 퇴사 ${count(to.left)}명`;
+      $('turnBasis').textContent = to.months >= 12 ? '최근 12개월' : `최근 ${to.months}개월`;
+    }
+    setTrack('turnTrack', to ? to.rate : null, TURNOVER_TARGET);
+    $('turnCap').textContent = `│ 목표 ${TURNOVER_TARGET}%`;
+
+    // 1인당 매출 + 전월 대비
+    const rpp = cur.headcount ? cur.revenue / cur.headcount : null;
+    $('rpp').textContent = rpp == null ? '–' : won(rpp);
+    if (rpp != null) $('rpp').title = fullWon(rpp);
+    const prpp = prev && prev.headcount ? prev.revenue / prev.headcount : null;
+    if (rpp != null && prpp) {
+      const d = rpp - prpp, p = d / prpp * 100;
+      $('rppSub').innerHTML = Math.abs(d) < 1 ? '전월과 같음'
+        : `전월 대비 <b class="${d > 0 ? 'accent' : 'neg'}">${d > 0 ? '▲' : '▼'} ${won(Math.abs(d))}</b> (${p > 0 ? '+' : ''}${trimZero(p.toFixed(1))}%)`;
+    } else $('rppSub').innerHTML = '&nbsp;';
+  }
+
+  // ================= 2. 월별 재직 인원 막대 =================
+  function niceStep(raw) {
+    if (raw <= 0) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw / p;
+    return [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((s) => n <= s) * p;
+  }
+  function barPath(x, y, w, h, r) {
+    if (h <= 0) return '';
+    r = Math.min(r, w / 2, h);
+    return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+  }
+
+  let hcWidth = 0;
+  function renderHeadcount() {
+    const box = $('hcChart');
+    const rows = state.monthly;
+    if (!rows.length) { box.innerHTML = placeholder(); return; }
+
+    const W = Math.max(box.clientWidth, 260);
+    hcWidth = box.clientWidth;
+    const H = W < 480 ? 230 : 290;
+    const pad = { top: 26, right: 4, bottom: 30, left: 40 };
+    const iw = W - pad.left - pad.right;
+    const ih = H - pad.top - pad.bottom;
+
+    const TICKS = 4;
+    const step = Math.max(1, Math.ceil(niceStep(Math.max(...rows.map((r) => r.headcount), 1) * 1.1 / TICKS)));
+    const yMax = step * TICKS;
+    const y = (v) => pad.top + ih - (v / yMax) * ih;
+
+    const n = rows.length;
+    const slot = iw / n;
+    const bw = Math.min(slot * 0.58, 44);
+    const lastIdx = n - 1;
+    const showAll = slot >= 30;
+    const labelEvery = Math.max(1, Math.ceil(30 / slot));
+    const cxOf = (i) => pad.left + slot * i + slot / 2;
+
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 재직 인원 막대그래프">`;
+    for (let i = 0; i <= TICKS; i++) {
+      const v = step * i, yy = y(v);
+      s += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${yy}" y2="${yy}" stroke="${i === 0 ? '#d3d7dc' : '#eef0f2'}"/>`;
+      s += `<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#9aa0a6">${count(v)}</text>`;
+    }
+    rows.forEach((r, i) => {
+      const cx = cxOf(i);
+      const top = y(r.headcount);
+      const isCur = i === lastIdx;
+      s += `<path d="${barPath(cx - bw / 2, top, bw, pad.top + ih - top, 3)}" fill="${isCur ? ORANGE : SILVER}"><title>${esc(monthLabel(r.month))} 재직 ${count(r.headcount)}명 · 입사 ${count(r.joined)} · 퇴사 ${count(r.left)}</title></path>`;
+      if (showAll || isCur) {
+        s += `<text x="${cx}" y="${top - 7}" text-anchor="middle" font-size="11" font-weight="${isCur ? 800 : 500}" fill="${isCur ? '#d63a00' : '#6b7178'}">${count(r.headcount)}</text>`;
+      }
+      if ((lastIdx - i) % labelEvery === 0) {
+        s += `<text x="${cx}" y="${H - 9}" text-anchor="middle" font-size="12" font-weight="${isCur ? 800 : 400}" fill="${isCur ? INK : '#6b7178'}">${esc(monthLabel(r.month))}</text>`;
+      }
+    });
+    s += '</svg>';
+    box.innerHTML = s;
+  }
+
+  // ================= 3. 근속 분포 도넛 =================
+  // 근속이 길수록 진한 색 (연한 은색 → 차콜)
+  function shade(i, n) {
+    const a = [213, 217, 222], b = [27, 30, 34];
+    const t = n <= 1 ? 1 : i / (n - 1);
+    return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * t)).join(',')})`;
+  }
+
+  function renderTenure() {
+    const box = $('tenure');
+    const segs = state.tenure.filter((s) => s.count > 0);
+    const total = segs.reduce((a, s) => a + s.count, 0);
+    if (!segs.length || !total) { box.innerHTML = placeholder('근속 데이터가 없어요'); return; }
+
+    const R = 70, SW = 24, C = 2 * Math.PI * R;
+    let acc = 0, rings = '';
+    segs.forEach((s, i) => {
+      const len = s.count / total * C;
+      const gap = segs.length > 1 ? Math.min(2, len / 2) : 0;
+      rings += `<circle cx="90" cy="90" r="${R}" fill="none" stroke="${shade(i, segs.length)}" stroke-width="${SW}"
+        stroke-dasharray="${Math.max(len - gap, 0)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 90 90)">
+        <title>${esc(s.bucket)} ${count(s.count)}명 (${fmtPct(s.count / total * 100, 1)})</title></circle>`;
+      acc += len;
+    });
+
+    const legend = segs.map((s, i) => `
+      <div class="mix-item">
+        <i style="background:${shade(i, segs.length)}"></i>
+        <span class="nm">${esc(s.bucket)}</span>
+        <span class="ct">${count(s.count)}명</span>
+        <span class="pc">${fmtPct(s.count / total * 100, 1)}</span>
+      </div>`).join('');
+
+    const to = turnover();
+    box.innerHTML = `
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="근속 분포 도넛 그래프">
+            <circle cx="90" cy="90" r="${R}" fill="none" stroke="#eceef1" stroke-width="${SW}"/>
+            ${rings}
+            <text x="90" y="88" text-anchor="middle" font-size="26" font-weight="800" fill="${INK}">${count(total)}</text>
+            <text x="90" y="108" text-anchor="middle" font-size="12" fill="#6b7178">총 인원(명)</text>
+          </svg>
+        </div>
+        <div class="mix">
+          ${legend}
+          <div class="stat-box">
+            <span>이직률<small>${to ? (to.months >= 12 ? '최근 12개월' : `최근 ${to.months}개월`) + ` · 목표 ${TURNOVER_TARGET}%` : ''}</small></span>
+            <b>${to ? fmtPct(to.rate, 1) : '–'}</b>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ================= 4. 부서별 인건비 표 =================
+  function renderDept() {
+    const box = $('dept');
+    const rows = [...state.dept].sort((a, b) => b.payroll - a.payroll);
+    if (!rows.length) { box.innerHTML = placeholder(); return; }
+
+    const max = Math.max(...rows.map((r) => r.payroll), 1);
+    const totalPay = rows.reduce((a, r) => a + r.payroll, 0);
+    const totalHc = rows.reduce((a, r) => a + r.headcount, 0);
+    let h = '<table class="dept"><thead><tr><th>부서</th><th>인건비</th><th class="r">금액</th><th class="r">인원</th></tr></thead><tbody>';
+    rows.forEach((r) => {
+      h += `<tr>
+        <td class="nm">${esc(r.dept)}</td>
+        <td class="barcell"><div class="dbar"><span style="width:${r.payroll / max * 100}%"></span></div></td>
+        <td class="r amt" title="${fullWon(r.payroll)} · 전체의 ${fmtPct(totalPay ? r.payroll / totalPay * 100 : 0, 1)}">${won(r.payroll)}</td>
+        <td class="r">${count(r.headcount)}명</td>
+      </tr>`;
+    });
+    h += `</tbody><tfoot><tr><td>합계</td><td></td><td class="r">${won(totalPay)}</td><td class="r">${count(totalHc)}명</td></tr></tfoot></table>`;
+    box.innerHTML = h;
+  }
+
+  // ================= 5. 부서별 초과근무 표 =================
+  function renderOvertime() {
+    const box = $('overtime');
+    if (!state.overtime.length) { box.innerHTML = placeholder(); $('otHint').innerHTML = ''; return; }
+
+    // 칸: 기본 5개 + 혹시 다른 구간이 있으면 뒤에 추가
+    const cols = [...OT_COLS];
+    state.overtime.forEach((r) => {
+      if (!cols.some((c) => c.key === r.key)) cols.push({ key: r.key, label: String(r.label) });
+    });
+
+    // 줄: 부서별 인건비 표와 같은 순서, 거기 없는 부서는 뒤에
+    const order = [...state.dept].sort((a, b) => b.payroll - a.payroll).map((d) => String(d.dept).trim());
+    const depts = [];
+    const map = {};
+    state.overtime.forEach((r) => {
+      const k = String(r.dept).trim();
+      if (!(k in map)) { map[k] = {}; depts.push(k); }
+      map[k][r.key] = (map[k][r.key] || 0) + r.count;
+    });
+    depts.sort((a, b) => {
+      const ia = order.indexOf(a), ib = order.indexOf(b);
+      return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+    });
+
+    const max = Math.max(1, ...state.overtime.map((r) => r.count));
+    const heavy = depts.reduce((a, k) => a + (map[k]['30+'] || 0), 0);
+    $('otHint').innerHTML = `30h 넘게 일한 인원 <b class="${heavy > 0 ? 'neg' : ''}">${count(heavy)}명</b>`;
+
+    let h = '<table class="ot"><thead><tr><th>부서</th>';
+    cols.forEach((c) => { h += `<th class="${c.key === '30+' ? 'warn' : ''}">${esc(c.label)}</th>`; });
+    h += '</tr></thead><tbody>';
+    depts.forEach((k) => {
+      h += `<tr><td class="d">${esc(k)}</td>`;
+      cols.forEach((c) => {
+        const v = map[k][c.key];
+        if (v == null) { h += '<td class="c empty"></td>'; return; }
+        if (v === 0) { h += `<td class="c zero" style="background:rgba(27,30,34,.04)">0</td>`; return; }
+        const alpha = 0.16 + 0.74 * (v / max);   // 많을수록 진하게
+        h += `<td class="c" style="background:rgba(27,30,34,${alpha.toFixed(3)});color:${alpha > 0.48 ? '#fff' : INK}" title="${esc(k)} · ${esc(c.label)} ${count(v)}명">${count(v)}</td>`;
+      });
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+    box.innerHTML = h;
+  }
+
+  // ================= 시작 =================
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (state.monthly.length && $('hcChart').clientWidth !== hcWidth) renderHeadcount();
+    }, 150);
+  });
+  $('refresh').addEventListener('click', load);
+  load();
+</script>
+</body>
+</html>
