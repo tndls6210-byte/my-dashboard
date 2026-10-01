@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ABOS 영업 대시보드</title>
+<title>ABOS 고객 대시보드</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
   /* ================= ABOS 로고에서 뽑은 색 ================= */
@@ -12,7 +12,7 @@
     --steel-dark: #4b5259;   /* 진한 철제 회색 */
     --silver: #c9ced4;       /* 로고 은색 판 */
     --orange: #ff4500;       /* 로고 화살표 오렌지 */
-    --orange-text: #d63a00;  /* 흰 바탕 위 오렌지 글씨 (읽기 쉽게 조금 진하게) */
+    --orange-text: #d63a00;  /* 흰 바탕 위 오렌지 글씨 */
     --page: #f3f4f6;
     --text: #1b1e22;
     --sub: #6b7178;
@@ -76,8 +76,13 @@
   .card-sub { font-size: 13px; color: var(--sub); margin-top: 6px; }
   .card-sub b { color: var(--text); font-weight: 700; }
   .card-sub b.accent { color: var(--orange-text); }
+  .spark { margin-top: 12px; height: 36px; }
+  .spark svg { display: block; overflow: visible; }
+  .spark-cap { font-size: 11px; color: var(--faint); margin-top: 4px; }
+  .mini-track { height: 6px; background: var(--track); border-radius: 999px; overflow: hidden; margin-top: 14px; }
+  .mini-track span { display: block; height: 100%; width: 0; background: var(--orange); border-radius: 999px; transition: width .8s ease; }
 
-  /* 이번 달 매출 카드: 로고 배경과 같은 차콜 + 화살표 무늬 */
+  /* 전체 고객 수 카드: 차콜 + 화살표 무늬 */
   .card.main {
     position: relative; overflow: hidden; color: #fff;
     background: linear-gradient(135deg, #2b3036 0%, var(--ink) 65%); border-color: var(--ink);
@@ -87,10 +92,10 @@
   .card.main .card-label { color: rgba(255,255,255,.7); }
   .tag { font-size: 11px; font-weight: 700; color: #fff; background: var(--orange); padding: 1px 8px; border-radius: 4px; }
   .card.main .card-value { font-size: 42px; line-height: 1.15; margin-top: 8px; }
-  .progress { height: 8px; background: rgba(255,255,255,.14); border-radius: 999px; overflow: hidden; margin-top: 16px; }
-  .progress span { display: block; height: 100%; width: 0; background: var(--orange); border-radius: 999px; transition: width .8s ease; }
-  .progress-row { display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,.7); }
-  .progress-row b { color: #fff; font-weight: 800; }
+  .main-stats { display: flex; gap: 22px; margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+  .main-stats span { display: block; font-size: 12px; color: rgba(255,255,255,.6); }
+  .main-stats b { font-size: 16px; font-weight: 800; }
+  .main-stats b.up { color: var(--orange); }
 
   /* ================= 패널 ================= */
   .row { display: grid; gap: 14px; margin-bottom: 14px; }
@@ -98,44 +103,55 @@
   .row.bottom { grid-template-columns: 1fr 1fr; }
   .panel-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 18px; }
   .panel h2 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+  .hint { font-size: 12px; color: var(--sub); }
   .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--sub); }
-  .legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .lg-box { width: 10px; height: 10px; border-radius: 2px; background: var(--silver); }
-  .lg-box.now { background: var(--orange); }
-  .lg-line { width: 16px; border-top: 2px dashed var(--ink); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .lg-linedot { position: relative; width: 18px; height: 2px; background: var(--ink); }
+  .lg-linedot::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; box-sizing: border-box;
+    border: 2px solid var(--ink); background: #fff; border-radius: 50%; transform: translate(-50%, -50%);
+  }
+  .lg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+  .lg-dash { width: 16px; border-top: 2px dashed var(--steel-dark); }
   .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
   .placeholder { color: var(--faint); font-size: 14px; padding: 40px 0; text-align: center; }
 
-  /* ================= 깔때기 ================= */
-  .funnel { display: grid; grid-template-columns: fit-content(120px) 1fr auto; column-gap: 12px; align-items: center; }
-  .f-name { font-size: 13px; font-weight: 600; }
-  .f-bar-wrap { display: flex; justify-content: center; }
-  .f-bar { height: 34px; border-radius: 4px; background: var(--silver); }
-  .f-bar.last { background: var(--orange); }
-  .f-count { font-size: 14px; font-weight: 800; text-align: right; white-space: nowrap; }
-  .f-conv { grid-column: 2; text-align: center; font-size: 12px; color: var(--sub); padding: 5px 0; }
-  .f-conv b { color: var(--text); font-weight: 700; }
-  .final {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    margin-top: 18px; padding: 14px 16px; border-radius: 8px; background: var(--ink); color: #fff;
-  }
-  .final-label { font-size: 13px; font-weight: 700; }
-  .final-sub { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 2px; }
-  .final-value { font-size: 28px; font-weight: 800; color: var(--orange); letter-spacing: -0.03em; white-space: nowrap; }
+  /* ================= 코호트 표 ================= */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -20px; padding: 0 20px; }
+  table.cohort { width: 100%; min-width: 520px; border-collapse: separate; border-spacing: 4px; font-size: 13px; margin: -4px; }
+  .cohort th { font-size: 12px; font-weight: 600; color: var(--sub); padding: 0 4px 6px; text-align: center; white-space: nowrap; }
+  .cohort th:first-child, .cohort td.m { text-align: left; position: sticky; left: 0; z-index: 1; background: #fff; }
+  .cohort td.m { font-weight: 700; padding-right: 10px; white-space: nowrap; }
+  .cohort td.c { height: 40px; text-align: center; border-radius: 4px; font-weight: 700; white-space: nowrap; }
+  .cohort td.empty { background: #f4f5f6; }
+  .scale { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--sub); }
+  .scale i { display: block; width: 90px; height: 8px; border-radius: 2px; background: linear-gradient(90deg, rgba(27,30,34,.06), rgba(27,30,34,.9)); }
 
-  /* ================= 순위 ================= */
-  .rank { list-style: none; display: grid; gap: 14px; }
-  .rank-top { display: flex; align-items: center; gap: 10px; }
-  .rank-no {
-    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
-    display: grid; place-items: center; font-size: 12px; font-weight: 800; color: var(--sub); background: var(--track);
-  }
-  .rank-no.first { background: var(--orange); color: #fff; }
-  .rank-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .rank-amt { font-size: 14px; font-weight: 800; white-space: nowrap; }
-  .rank-track { height: 8px; border-radius: 999px; background: var(--track); margin: 8px 0 0 32px; overflow: hidden; }
-  .rank-track span { display: block; height: 100%; border-radius: 999px; background: var(--silver); }
-  .rank li:first-child .rank-track span { background: var(--steel-dark); }
+  /* ================= 도넛 ================= */
+  .donut-wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .donut { width: 180px; height: 180px; flex-shrink: 0; margin: 0 auto; }
+  .donut svg { display: block; }
+  .mix { flex: 1; min-width: 200px; }
+  .mix-item { display: grid; grid-template-columns: 10px 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f1f3; }
+  .mix-item i { width: 10px; height: 10px; border-radius: 2px; }
+  .mix-item .nm { font-size: 14px; font-weight: 600; }
+  .mix-item .pc { font-size: 15px; font-weight: 800; text-align: right; }
+  .mix-item .amt { grid-column: 2 / 4; font-size: 12px; color: var(--sub); }
+  .ltv-box { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding: 12px 14px; background: var(--ink); color: #fff; border-radius: 8px; }
+  .ltv-box span { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.75); }
+  .ltv-box b { font-size: 20px; font-weight: 800; color: var(--orange); white-space: nowrap; }
+
+  /* ================= 재구매율 가로 막대 ================= */
+  .rp { display: grid; gap: 20px; }
+  .rp-row { display: grid; grid-template-columns: 56px 1fr 56px; align-items: center; gap: 12px; }
+  .rp-label { font-size: 14px; font-weight: 600; }
+  .rp-track { position: relative; height: 26px; background: var(--track); border-radius: 4px; overflow: hidden; }
+  .rp-track span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--silver); border-radius: 4px; }
+  .rp-row.hl .rp-track span { background: var(--orange); }
+  .rp-val { font-size: 15px; font-weight: 800; text-align: right; }
+  .rp-row.hl .rp-val { color: var(--orange-text); }
+  .rp-axis { display: grid; grid-template-columns: 56px 1fr 56px; gap: 12px; font-size: 11px; color: var(--faint); }
+  .rp-axis div { display: flex; justify-content: space-between; }
 
   /* ================= 화면 크기별 ================= */
   @media (max-width: 960px) {
@@ -156,16 +172,17 @@
     .page-head { margin: 20px 0 14px; }
     h1 { font-size: 20px; }
     .cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .card.target { grid-column: 1 / -1; }
+    .card.wide { grid-column: 1 / -1; }
     .row { gap: 10px; margin-bottom: 10px; }
     .card, .panel { padding: 16px; }
+    .table-wrap { margin: 0 -16px; padding: 0 16px; }
     .card-value { font-size: 21px; }
     .card.main .card-value { font-size: 34px; }
     .card.main .wm { height: 120px; }
-    .final-value { font-size: 24px; }
+    .donut-wrap { gap: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .progress span { transition: none; }
+    .mini-track span { transition: none; }
   }
 </style>
 <script>
@@ -211,7 +228,7 @@
 <main class="wrap">
 
   <div class="page-head">
-    <h1>영업 대시보드</h1>
+    <h1>고객 대시보드</h1>
     <p class="updated" id="updated">데이터 불러오는 중…</p>
   </div>
 
@@ -231,56 +248,69 @@
         <polygon points="30,0 46,0 66,40 46,80 30,80 50,40" fill="url(#wmg)"/>
         <polygon points="60,0 76,0 96,40 76,80 60,80 80,40" fill="url(#wmg)"/>
       </svg>
-      <div class="card-label">이번 달 매출 <span class="tag" id="curMonth">–</span></div>
-      <div class="card-value" id="revenue">–</div>
-      <div class="progress"><span id="rateBar"></span></div>
-      <div class="progress-row"><span>목표 대비 달성률</span><b id="rateText">–</b></div>
+      <div class="card-label">전체 고객 수 <span class="tag" id="curMonth">–</span></div>
+      <div class="card-value" id="total">–</div>
+      <div class="main-stats">
+        <div><span>이번 달 신규</span><b id="newCus">–</b></div>
+        <div><span>전월 대비</span><b id="totalDelta">–</b></div>
+      </div>
     </div>
-    <div class="card target">
-      <div class="card-label">이번 달 목표</div>
-      <div class="card-value" id="target">–</div>
-      <div class="card-sub" id="remain">&nbsp;</div>
-    </div>
-    <div class="card">
-      <div class="card-label">객단가</div>
-      <div class="card-value" id="aov">–</div>
-      <div class="card-sub" id="aovSub">&nbsp;</div>
+    <div class="card wide">
+      <div class="card-label">재구매율 (6개월)</div>
+      <div class="card-value" id="repeat6">–</div>
+      <div class="card-sub">첫 구매 후 6개월 안에 다시 구매한 고객 비율</div>
+      <div class="mini-track"><span id="repeatBar"></span></div>
     </div>
     <div class="card">
-      <div class="card-label">계약 건수</div>
-      <div class="card-value" id="contracts">–</div>
-      <div class="card-sub" id="contractsSub">&nbsp;</div>
+      <div class="card-label">이탈률</div>
+      <div class="card-value" id="churn">–</div>
+      <div class="card-sub" id="churnSub">&nbsp;</div>
+      <div class="spark" id="churnSpark"></div>
+      <div class="spark-cap">최근 6개월 추이</div>
+    </div>
+    <div class="card">
+      <div class="card-label">LTV (고객 생애 가치)</div>
+      <div class="card-value" id="ltv">–</div>
+      <div class="card-sub" id="ltvSub">&nbsp;</div>
+      <div class="spark" id="ltvSpark"></div>
+      <div class="spark-cap">최근 6개월 추이</div>
     </div>
   </section>
 
-  <!-- 2, 3. 월별 매출 / 영업 단계 -->
+  <!-- 2, 3. 코호트 / 매출 구성 -->
   <section class="row top">
     <div class="panel">
       <div class="panel-head">
-        <h2>월별 매출</h2>
-        <div class="legend">
-          <span><i class="lg-box now"></i>이번 달</span>
-          <span><i class="lg-box"></i>지난 달</span>
-          <span><i class="lg-line"></i>목표</span>
-        </div>
+        <h2>코호트 잔존율</h2>
+        <div class="scale">낮음 <i></i> 높음</div>
       </div>
-      <div class="chart" id="monthly"><div class="placeholder">불러오는 중…</div></div>
+      <div class="table-wrap" id="cohort"><div class="placeholder">불러오는 중…</div></div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>영업 단계</h2></div>
-      <div id="funnel"><div class="placeholder">불러오는 중…</div></div>
+      <div class="panel-head"><h2>매출 구성</h2></div>
+      <div id="mix"><div class="placeholder">불러오는 중…</div></div>
     </div>
   </section>
 
-  <!-- 4, 5. 순위 -->
+  <!-- 4, 5. 재구매율 / 이탈률 -->
   <section class="row bottom">
     <div class="panel">
-      <div class="panel-head"><h2>담당자별 순위</h2></div>
-      <div id="rankPerson"><div class="placeholder">불러오는 중…</div></div>
+      <div class="panel-head">
+        <h2>기간별 재구매율</h2>
+        <span class="hint">주황 = 위 카드에 쓰인 6개월 값</span>
+      </div>
+      <div id="repeat"><div class="placeholder">불러오는 중…</div></div>
     </div>
     <div class="panel">
-      <div class="panel-head"><h2>상품별 순위</h2></div>
-      <div id="rankProduct"><div class="placeholder">불러오는 중…</div></div>
+      <div class="panel-head">
+        <h2>월별 이탈률</h2>
+        <div class="legend">
+          <span><i class="lg-linedot"></i>이탈률</span>
+          <span><i class="lg-dot"></i>목표 초과</span>
+          <span><i class="lg-dash"></i>목표</span>
+        </div>
+      </div>
+      <div class="chart" id="churnChart"><div class="placeholder">불러오는 중…</div></div>
     </div>
   </section>
 
@@ -292,27 +322,27 @@
   const SUPABASE_URL = 'https://rslrkmfbywfmednotfta.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzbHJrbWZieXdmbWVkbm90ZnRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NjQ2MTksImV4cCI6MjEwNjM0MDYxOX0.9rv7w5HVHo0PymE48kwoyjTsqpC2xmXJB5u5E0ic7Ps';
 
-  // ================= 금액 단위 =================
-  // DB에 들어있는 금액이 '원' 단위면 1, '천원' 단위면 1000, '만원' 단위면 10000
-  const MONEY_UNIT = 1;
+  // ================= 직접 바꿔 쓰는 설정 =================
+  const CHURN_TARGET = 4.0;  // 목표 이탈률(%) — 이탈률 그래프의 점선 위치
+  const MONEY_UNIT = 1;      // DB 금액이 '원' 단위면 1, '천원' 1000, '만원' 10000
 
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // ================= 공통 도구 =================
   const ORANGE = '#ff4500';
-  const ORANGE_TEXT = '#d63a00';
   const INK = '#1b1e22';
-  const BAR = '#c9ced4';
-  const state = { monthly: [], pipeline: [], rank: [] };
+  const SEG_COLORS = ['#ff4500', '#1b1e22', '#c9ced4', '#8a9097', '#4b5259'];
+  const state = { summary: [], cohort: [], repeat: [], mix: [] };
 
   const $ = (id) => document.getElementById(id);
   const num = (v) => Number(v) || 0;
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const trimZero = (s) => (s.includes('.') ? s.replace(/\.?0+$/, '') : s);
   const placeholder = (t) => `<div class="placeholder">${t || '표시할 데이터가 없어요'}</div>`;
+  const count = (v) => Math.round(num(v)).toLocaleString('ko-KR');
+  const fmtPct = (v, d) => (v == null || !isFinite(v) ? '–' : trimZero(Number(v).toFixed(d)) + '%');
 
-  // 짧은 금액: 3,450만 / 1.25억
   function money(v) {
     const w = num(v) * MONEY_UNIT;
     const a = Math.abs(w);
@@ -322,9 +352,8 @@
   }
   const won = (v) => money(v) + '원';
   const fullWon = (v) => Math.round(num(v) * MONEY_UNIT).toLocaleString('ko-KR') + '원';
-  const pct = (a, b) => (b ? trimZero((a / b * 100).toFixed(1)) + '%' : '-');
+  const moneyDetail = (v) => (Math.abs(num(v) * MONEY_UNIT) < 1e6 ? fullWon(v) : won(v));
 
-  // '2026-09', '9', '9월' 등을 '9월'로
   function monthLabel(m) {
     const s = String(m ?? '').trim();
     const ym = s.match(/^(\d{4})[-./](\d{1,2})/);
@@ -332,9 +361,12 @@
     if (/^\d{1,2}$/.test(s)) return Number(s) + '월';
     return s;
   }
+  // '6개월', '6', 'M+6' → 6
+  const periodMonths = (p) => { const m = String(p ?? '').match(/\d+/); return m ? Number(m[0]) : null; };
+  const periodLabel = (p) => (/^\d+$/.test(String(p ?? '').trim()) ? String(p).trim() + '개월' : String(p ?? ''));
 
   // ================= 오류를 알아보기 쉬운 말로 =================
-  const TABLES = ['sales_monthly', 'sales_pipeline', 'sales_rank'];
+  const TABLES = ['customer_summary', 'customer_cohort', 'customer_repeat', 'customer_mix'];
   function explain(table, err) {
     const msg = String((err && (err.message || err)) || '');
     const code = (err && err.code) || '';
@@ -343,7 +375,7 @@
     if (code === '42703' || /column .*does not exist/i.test(msg)) {
       text = `${t}테이블에 필요한 칸(컬럼)이 없거나 이름이 달라요.`;
     } else if (code === 'PGRST205' || code === '42P01' || /could not find the table|does not exist/i.test(msg)) {
-      text = `${t}테이블을 찾지 못했어요. Supabase에 이 이름 그대로(전부 소문자) 테이블이 있는지 확인해 주세요.`;
+      text = `${t}테이블을 찾지 못했어요. Supabase에서 테이블을 만드는 SQL을 실행했는지 확인해 주세요.`;
     } else if (code === '42501' || /permission denied/i.test(msg)) {
       text = `${t}테이블을 읽을 권한이 없어요. 읽기(SELECT) 권한과 RLS 정책을 확인해 주세요.`;
     } else if (/invalid api key|jwt|apikey/i.test(msg)) {
@@ -363,29 +395,32 @@
     hideNotice();
     try {
       const results = await Promise.all([
-        db.from('sales_monthly').select('*').order('sort_order', { ascending: true }),
-        db.from('sales_pipeline').select('*').order('sort_order', { ascending: true }),
-        db.from('sales_rank').select('*')
+        db.from('customer_summary').select('*').order('sort_order', { ascending: true }),
+        db.from('customer_cohort').select('*').order('sort_order', { ascending: true }),
+        db.from('customer_repeat').select('*').order('sort_order', { ascending: true }),
+        db.from('customer_mix').select('*').order('sort_order', { ascending: true })
       ]);
-      const [m, p, r] = results;
+      const [s, c, r, x] = results;
 
-      // 테이블마다 따로 확인 (되는 테이블은 그대로 보여주기)
       const problems = [];
       results.forEach((res, i) => { if (res.error) problems.push(explain(TABLES[i], res.error)); });
 
-      state.monthly = m.error ? [] : (m.data || []).map((d) => ({ month: d.month, revenue: num(d.revenue), target: num(d.target) }));
-      state.pipeline = p.error ? [] : (p.data || []).map((d) => ({ stage: d.stage, count: num(d.count) }));
-      state.rank = r.error ? [] : (r.data || []).map((d) => ({ kind: String(d.kind || '').trim().toLowerCase(), name: d.name, amount: num(d.amount) }));
+      state.summary = s.error ? [] : (s.data || []).map((d) => ({
+        month: d.month, total: num(d.total_customers), fresh: num(d.new_customers), churn: num(d.churn_rate), ltv: num(d.ltv)
+      }));
+      state.cohort = c.error ? [] : (c.data || []).map((d) => ({ cohort: d.cohort_month, after: num(d.months_after), retention: d.retention == null ? null : num(d.retention) }));
+      state.repeat = r.error ? [] : (r.data || []).map((d) => ({ period: d.period, rate: num(d.rate) }));
+      state.mix = x.error ? [] : (x.data || []).map((d) => ({ segment: d.segment, revenue: num(d.revenue) }));
 
       renderAll();
 
       if (problems.length) {
-        $('updated').textContent = problems.length === 3 ? '불러오기 실패' : '일부 데이터를 불러오지 못했어요';
+        $('updated').textContent = problems.length === TABLES.length ? '불러오기 실패' : '일부 데이터를 불러오지 못했어요';
         showNotice('데이터를 불러오지 못했어요.', [...new Set(problems)].join(''));
       } else {
         $('updated').textContent = '마지막 업데이트 ' + new Date().toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        if (!state.monthly.length && !state.pipeline.length && !state.rank.length) {
-          showNotice('가져온 데이터가 없어요.', '<div class="line">테이블에 데이터가 있는데도 이렇게 보이면, 세 테이블에 읽기(SELECT) 허용 정책(RLS)이 있는지 확인해 주세요.</div>');
+        if (!state.summary.length && !state.cohort.length && !state.repeat.length && !state.mix.length) {
+          showNotice('가져온 데이터가 없어요.', '<div class="line">테이블에 데이터가 있는데도 이렇게 보이면, 테이블에 읽기(SELECT) 허용 정책(RLS)이 있는지 확인해 주세요.</div>');
         }
       }
     } catch (e) {
@@ -405,183 +440,239 @@
 
   function renderAll() {
     renderCards();
-    renderMonthly();
-    renderFunnel();
-    renderRank('rankPerson', 'person');
-    renderRank('rankProduct', 'product');
+    renderCohort();
+    renderMix();
+    renderRepeat();
+    renderChurn();
+  }
+
+  // 전월 대비 문구: good=true면 좋아진 쪽을 주황으로
+  function deltaText(d, unit, good) {
+    if (d == null || !isFinite(d)) return '';
+    if (Math.abs(d) < 1e-9) return '전월과 같음';
+    const arrow = d > 0 ? '▲' : '▼';
+    return `전월 대비 <b class="${good ? 'accent' : ''}">${arrow} ${unit(Math.abs(d))}</b> ${good ? '개선' : '악화'}`;
   }
 
   // ================= 1. 카드 =================
   function renderCards() {
-    const m = state.monthly, p = state.pipeline;
-    const cur = m[m.length - 1];
-    const last = p[p.length - 1];
-    const contracts = last ? last.count : 0;
+    const s = state.summary;
+    const cur = s[s.length - 1];
+    const prev = s.length >= 2 ? s[s.length - 2] : null;
 
-    $('contracts').textContent = last ? contracts.toLocaleString('ko-KR') + '건' : '–';
-    $('contractsSub').textContent = last ? `마지막 단계 '${last.stage}' 기준` : '영업 단계 데이터 없음';
+    if (cur) {
+      $('curMonth').textContent = monthLabel(cur.month);
+      $('total').textContent = count(cur.total) + '명';
+      $('newCus').textContent = '+' + count(cur.fresh) + '명';
+      if (prev && prev.total) {
+        const g = (cur.total - prev.total) / prev.total * 100;
+        $('totalDelta').textContent = (g >= 0 ? '+' : '') + trimZero(g.toFixed(1)) + '%';
+        $('totalDelta').className = g > 0 ? 'up' : '';
+      } else $('totalDelta').textContent = '–';
 
-    if (!cur) {
-      ['revenue', 'target', 'aov', 'rateText', 'curMonth'].forEach((id) => ($(id).textContent = '–'));
-      $('remain').textContent = '월별 매출 데이터 없음';
-      $('aovSub').innerHTML = '&nbsp;';
-      $('rateBar').style.width = '0';
-      return;
+      $('churn').textContent = fmtPct(cur.churn, 1);
+      $('churnSub').innerHTML = prev ? deltaText(cur.churn - prev.churn, (v) => trimZero(v.toFixed(1)) + '%p', cur.churn < prev.churn) : '&nbsp;';
+      $('ltv').textContent = moneyDetail(cur.ltv);
+      $('ltv').title = fullWon(cur.ltv);
+      $('ltvSub').innerHTML = prev ? deltaText(cur.ltv - prev.ltv, (v) => moneyDetail(v), cur.ltv > prev.ltv) : '&nbsp;';
+    } else {
+      ['curMonth', 'total', 'newCus', 'totalDelta', 'churn', 'ltv'].forEach((id) => ($(id).textContent = '–'));
+      $('churnSub').textContent = '월별 고객 데이터 없음';
+      $('ltvSub').innerHTML = '&nbsp;';
     }
 
-    $('curMonth').textContent = monthLabel(cur.month);
-    $('revenue').textContent = won(cur.revenue);
-    $('revenue').title = fullWon(cur.revenue);
-    $('rateText').textContent = pct(cur.revenue, cur.target);
-    $('rateBar').style.width = (cur.target ? Math.min(cur.revenue / cur.target * 100, 100) : 0) + '%';
+    const six = state.repeat.find((r) => periodMonths(r.period) === 6);
+    $('repeat6').textContent = six ? fmtPct(six.rate, 1) : '–';
+    $('repeatBar').style.width = six ? Math.min(six.rate, 100) + '%' : '0';
 
-    $('target').textContent = won(cur.target);
-    $('target').title = fullWon(cur.target);
-    const remain = cur.target - cur.revenue;
-    $('remain').innerHTML = remain > 0
-      ? `남은 금액 <b>${won(remain)}</b>`
-      : `<b class="accent">목표 달성</b>${remain < 0 ? ` · ${won(-remain)} 초과` : ''}`;
-
-    $('aov').textContent = contracts ? won(cur.revenue / contracts) : '–';
-    $('aovSub').textContent = `매출 ÷ 계약 ${contracts.toLocaleString('ko-KR')}건`;
+    renderSparks();
   }
 
-  // ================= 2. 월별 매출 막대그래프 =================
+  // 작은 선그래프 (최근 6개월)
+  function sparkline(id, values) {
+    const el = $(id);
+    if (values.length < 2) { el.innerHTML = ''; return; }
+    const W = Math.max(el.clientWidth, 80), H = 36, p = 4;
+    const min = Math.min(...values), max = Math.max(...values), span = max - min || 1;
+    const x = (i) => p + (W - p * 2) * i / (values.length - 1);
+    const y = (v) => p + (H - p * 2) * (1 - (v - min) / span);
+    const pts = values.map((v, i) => [x(i), y(v)]);
+    const last = pts[pts.length - 1];
+    el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+      <path d="${pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ',' + q[1]).join('')}" fill="none" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="${last[0]}" cy="${last[1]}" r="3.5" fill="${ORANGE}"/>
+    </svg>`;
+  }
+  function renderSparks() {
+    const recent = state.summary.slice(-6);
+    sparkline('churnSpark', recent.map((r) => r.churn));
+    sparkline('ltvSpark', recent.map((r) => r.ltv));
+  }
+
+  // ================= 2. 코호트 잔존율 표 =================
+  function renderCohort() {
+    const box = $('cohort');
+    if (!state.cohort.length) { box.innerHTML = placeholder(); return; }
+
+    // 유입 월 순서는 sort_order 순서대로
+    const months = [];
+    const map = {};
+    state.cohort.forEach((r) => {
+      const k = String(r.cohort).trim();
+      if (!(k in map)) { map[k] = {}; months.push(k); }
+      map[k][r.after] = r.retention;
+    });
+
+    // 가장 낮은 값 = 가장 연하게, 가장 높은 값 = 가장 진하게
+    const vals = state.cohort.map((r) => r.retention).filter((v) => v != null);
+    const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+
+    let h = '<table class="cohort"><thead><tr><th>유입 월</th>';
+    for (let a = 0; a <= 5; a++) h += `<th>M+${a}</th>`;
+    h += '</tr></thead><tbody>';
+    months.forEach((k) => {
+      h += `<tr><td class="m">${esc(monthLabel(k))}</td>`;
+      for (let a = 0; a <= 5; a++) {
+        const v = map[k][a];
+        if (v == null) { h += '<td class="c empty"></td>'; continue; }
+        const t = (v - lo) / span;                              // 0~1
+        const alpha = 0.16 + 0.74 * t;                          // 클수록 진하게 (빈칸보다는 항상 진하게)
+        h += `<td class="c" style="background:rgba(27,30,34,${alpha.toFixed(3)});color:${alpha > 0.48 ? '#fff' : INK}" title="${esc(monthLabel(k))} 유입 · M+${a} 잔존 ${fmtPct(v, 1)}">${fmtPct(v, 0)}</td>`;
+      }
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+    box.innerHTML = h;
+  }
+
+  // ================= 3. 매출 구성 도넛 =================
+  function renderMix() {
+    const box = $('mix');
+    const segs = state.mix.filter((s) => s.revenue > 0);
+    const totalRev = segs.reduce((a, s) => a + s.revenue, 0);
+    if (!segs.length || !totalRev) { box.innerHTML = placeholder('매출 구성 데이터가 없어요'); return; }
+
+    const cur = state.summary[state.summary.length - 1];
+    const R = 70, SW = 24, C = 2 * Math.PI * R;
+    let acc = 0;
+    let rings = '';
+    segs.forEach((s, i) => {
+      const len = s.revenue / totalRev * C;
+      const gap = segs.length > 1 ? Math.min(2, len / 2) : 0;
+      rings += `<circle cx="90" cy="90" r="${R}" fill="none" stroke="${SEG_COLORS[i % SEG_COLORS.length]}" stroke-width="${SW}"
+        stroke-dasharray="${Math.max(len - gap, 0)} ${C}" stroke-dashoffset="${-acc}" transform="rotate(-90 90 90)">
+        <title>${esc(s.segment)} ${fmtPct(s.revenue / totalRev * 100, 1)} · ${fullWon(s.revenue)}</title></circle>`;
+      acc += len;
+    });
+
+    const legend = segs.map((s, i) => `
+      <div class="mix-item">
+        <i style="background:${SEG_COLORS[i % SEG_COLORS.length]}"></i>
+        <span class="nm">${esc(s.segment)}</span>
+        <span class="pc">${fmtPct(s.revenue / totalRev * 100, 1)}</span>
+        <span class="amt">${won(s.revenue)}</span>
+      </div>`).join('');
+
+    box.innerHTML = `
+      <div class="donut-wrap">
+        <div class="donut">
+          <svg width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="매출 구성 도넛 그래프">
+            <circle cx="90" cy="90" r="${R}" fill="none" stroke="#eceef1" stroke-width="${SW}"/>
+            ${rings}
+            <text x="90" y="86" text-anchor="middle" font-size="22" font-weight="800" fill="${INK}">${cur ? count(cur.total) : '–'}</text>
+            <text x="90" y="106" text-anchor="middle" font-size="12" fill="#6b7178">전체 고객(명)</text>
+          </svg>
+        </div>
+        <div class="mix">
+          ${legend}
+          <div class="ltv-box"><span>1인당 LTV</span><b>${cur ? moneyDetail(cur.ltv) : '–'}</b></div>
+        </div>
+      </div>`;
+  }
+
+  // ================= 4. 기간별 재구매율 =================
+  function renderRepeat() {
+    const box = $('repeat');
+    const rows = state.repeat;
+    if (!rows.length) { box.innerHTML = placeholder(); return; }
+
+    let h = '<div class="rp">';
+    rows.forEach((r) => {
+      const hl = periodMonths(r.period) === 6;
+      h += `<div class="rp-row${hl ? ' hl' : ''}">
+        <span class="rp-label">${esc(periodLabel(r.period))}</span>
+        <div class="rp-track"><span style="width:${Math.max(0, Math.min(r.rate, 100))}%"></span></div>
+        <span class="rp-val">${fmtPct(r.rate, 1)}</span>
+      </div>`;
+    });
+    h += '<div class="rp-axis"><span></span><div><span>0%</span><span>50%</span><span>100%</span></div><span></span></div>';
+    h += '</div>';
+    box.innerHTML = h;
+  }
+
+  // ================= 5. 월별 이탈률 선그래프 =================
   function niceStep(raw) {
     if (raw <= 0) return 1;
     const p = Math.pow(10, Math.floor(Math.log10(raw)));
     const n = raw / p;
-    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
-  }
-  function barPath(x, y, w, h, r) {
-    if (h <= 0) return '';
-    r = Math.min(r, w / 2, h);
-    return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+    return [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((s) => n <= s) * p;
   }
 
-  let chartWidth = 0;
-  function renderMonthly() {
-    const box = $('monthly');
-    const rows = state.monthly;
+  let churnWidth = 0;
+  function renderChurn() {
+    const box = $('churnChart');
+    const rows = state.summary;
     if (!rows.length) { box.innerHTML = placeholder(); return; }
 
     const W = Math.max(box.clientWidth, 260);
-    chartWidth = box.clientWidth;
-    const H = W < 480 ? 230 : 320;
-    const pad = { top: 26, right: 4, bottom: 30, left: 50 };
+    churnWidth = box.clientWidth;
+    const H = W < 480 ? 220 : 250;
+    const pad = { top: 24, right: 12, bottom: 30, left: 42 };
     const iw = W - pad.left - pad.right;
     const ih = H - pad.top - pad.bottom;
 
-    // 세로축: 가장 큰 값보다 살짝 높은 깔끔한 숫자로
-    const maxVal = Math.max(...rows.map((r) => Math.max(r.revenue, r.target)), 1) * 1.08;
-    let step = 0, ticks = 4;
-    [4, 5, 3].forEach((t) => {
-      const st = niceStep(maxVal / t);
-      if (!step || st * t < step * ticks) { step = st; ticks = t; }
-    });
-    const yMax = step * ticks;
+    const TICKS = 4;
+    const step = niceStep(Math.max(...rows.map((r) => r.churn), CHURN_TARGET, 1) * 1.25 / TICKS);
+    const yMax = step * TICKS;
     const y = (v) => pad.top + ih - (v / yMax) * ih;
 
     const n = rows.length;
     const slot = iw / n;
-    const bw = Math.min(slot * 0.58, 46);
     const lastIdx = n - 1;
-    const showAllValues = slot >= 54;
+    const showAll = slot >= 50;
     const labelEvery = Math.max(1, Math.ceil(30 / slot));
     const cxOf = (i) => pad.left + slot * i + slot / 2;
 
-    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 매출 막대그래프">`;
-
-    // 가로 눈금선
-    for (let i = 0; i <= ticks; i++) {
+    let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="월별 이탈률 선그래프">`;
+    for (let i = 0; i <= TICKS; i++) {
       const v = step * i, yy = y(v);
       s += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${yy}" y2="${yy}" stroke="${i === 0 ? '#d3d7dc' : '#eef0f2'}"/>`;
-      s += `<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#9aa0a6">${money(v)}</text>`;
+      s += `<text x="${pad.left - 8}" y="${yy + 4}" text-anchor="end" font-size="11" fill="#9aa0a6">${trimZero(String(Math.round(v * 100) / 100))}%</text>`;
     }
 
-    // 막대 + 월 이름
+    // 목표 점선
+    const ty = y(CHURN_TARGET);
+    s += `<line x1="${pad.left}" x2="${W - pad.right}" y1="${ty}" y2="${ty}" stroke="#4b5259" stroke-width="1.5" stroke-dasharray="5 4"/>`;
+    s += `<text x="${pad.left + 4}" y="${ty + 15}" text-anchor="start" font-size="11" font-weight="700" fill="#4b5259" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">목표 ${fmtPct(CHURN_TARGET, 1)}</text>`;
+
+    // 이탈률 선
+    const pts = rows.map((r, i) => [cxOf(i), y(r.churn)]);
+    s += `<path d="${pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ',' + p[1]).join('')}" fill="none" stroke="${INK}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
     rows.forEach((r, i) => {
-      const cx = cxOf(i);
-      const top = y(r.revenue);
+      const [px, py] = pts[i];
+      const over = r.churn > CHURN_TARGET;     // 목표보다 높으면 주황 점
       const isCur = i === lastIdx;
-      const tip = `${esc(monthLabel(r.month))} 매출 ${fullWon(r.revenue)} / 목표 ${fullWon(r.target)} (${pct(r.revenue, r.target)})`;
-      s += `<path d="${barPath(cx - bw / 2, top, bw, pad.top + ih - top, 3)}" fill="${isCur ? ORANGE : BAR}"><title>${tip}</title></path>`;
+      s += `<circle cx="${px}" cy="${py}" r="${isCur ? 5 : 4}" fill="${over ? ORANGE : '#fff'}" stroke="${over ? ORANGE : INK}" stroke-width="2"><title>${esc(monthLabel(r.month))} 이탈률 ${fmtPct(r.churn, 1)}</title></circle>`;
+      if (showAll || isCur) {
+        s += `<text x="${px}" y="${py - 11}" text-anchor="middle" font-size="11" font-weight="${isCur ? 800 : 600}" fill="${INK}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${fmtPct(r.churn, 1)}</text>`;
+      }
       if ((lastIdx - i) % labelEvery === 0) {
-        s += `<text x="${cx}" y="${H - 9}" text-anchor="middle" font-size="12" font-weight="${isCur ? 800 : 400}" fill="${isCur ? INK : '#6b7178'}">${esc(monthLabel(r.month))}</text>`;
+        s += `<text x="${px}" y="${H - 9}" text-anchor="middle" font-size="12" font-weight="${isCur ? 800 : 400}" fill="${isCur ? INK : '#6b7178'}">${esc(monthLabel(r.month))}</text>`;
       }
-    });
-
-    // 목표 점선 (같은 목표가 이어지는 달은 한 줄로)
-    let i = 0;
-    while (i < n) {
-      let j = i;
-      while (j + 1 < n && rows[j + 1].target === rows[i].target) j++;
-      const t = rows[i].target;
-      if (t > 0) {
-        const yy = y(t);
-        s += `<line x1="${pad.left + slot * i}" x2="${pad.left + slot * (j + 1)}" y1="${yy}" y2="${yy}" stroke="${INK}" stroke-width="1.5" stroke-dasharray="5 4"><title>목표 ${fullWon(t)}</title></line>`;
-      }
-      i = j + 1;
-    }
-
-    // 막대 위 금액 (점선 위에 겹쳐도 읽히도록 흰 테두리)
-    rows.forEach((r, i) => {
-      const isCur = i === lastIdx;
-      if (!showAllValues && !isCur) return;
-      s += `<text x="${cxOf(i)}" y="${y(r.revenue) - 8}" text-anchor="middle" font-size="11" font-weight="${isCur ? 800 : 500}" fill="${isCur ? ORANGE_TEXT : '#6b7178'}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${money(r.revenue)}</text>`;
     });
 
     s += '</svg>';
     box.innerHTML = s;
-  }
-
-  // ================= 3. 영업 단계 깔때기 =================
-  function renderFunnel() {
-    const box = $('funnel');
-    const rows = state.pipeline;
-    if (!rows.length) { box.innerHTML = placeholder(); return; }
-
-    const first = rows[0], last = rows[rows.length - 1];
-    const max = Math.max(...rows.map((r) => r.count), 1);
-    let h = '<div class="funnel">';
-    rows.forEach((r, i) => {
-      const gridRow = i * 2 + 1;
-      if (i > 0) {
-        h += `<div class="f-conv" style="grid-row:${gridRow - 1}">↓ 전환 <b>${pct(r.count, rows[i - 1].count)}</b></div>`;
-      }
-      const w = Math.max(r.count / max * 100, 4);
-      h += `<div class="f-name" style="grid-row:${gridRow};grid-column:1">${esc(r.stage)}</div>`;
-      h += `<div class="f-bar-wrap" style="grid-row:${gridRow};grid-column:2"><div class="f-bar${i === rows.length - 1 ? ' last' : ''}" style="width:${w}%"></div></div>`;
-      h += `<div class="f-count" style="grid-row:${gridRow};grid-column:3">${r.count.toLocaleString('ko-KR')}건</div>`;
-    });
-    h += '</div>';
-    h += `
-      <div class="final">
-        <div>
-          <div class="final-label">최종 전환율</div>
-          <div class="final-sub">${esc(last.stage)} ${last.count.toLocaleString('ko-KR')}건 ÷ ${esc(first.stage)} ${first.count.toLocaleString('ko-KR')}건</div>
-        </div>
-        <div class="final-value">${pct(last.count, first.count)}</div>
-      </div>`;
-    box.innerHTML = h;
-  }
-
-  // ================= 4, 5. 순위 =================
-  function renderRank(id, kind) {
-    const box = $(id);
-    const rows = state.rank.filter((r) => r.kind === kind).sort((a, b) => b.amount - a.amount);
-    if (!rows.length) { box.innerHTML = placeholder(); return; }
-
-    const max = Math.max(rows[0].amount, 1);
-    box.innerHTML = '<ol class="rank">' + rows.map((r, i) => `
-      <li>
-        <div class="rank-top">
-          <span class="rank-no${i === 0 ? ' first' : ''}">${i + 1}</span>
-          <span class="rank-name">${esc(r.name)}</span>
-          <span class="rank-amt" title="${fullWon(r.amount)}">${won(r.amount)}</span>
-        </div>
-        <div class="rank-track"><span style="width:${Math.max(r.amount / max * 100, 2)}%"></span></div>
-      </li>`).join('') + '</ol>';
   }
 
   // ================= 시작 =================
@@ -589,7 +680,10 @@
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
-      if (state.monthly.length && $('monthly').clientWidth !== chartWidth) renderMonthly();
+      if (state.summary.length) {
+        renderSparks();
+        if ($('churnChart').clientWidth !== churnWidth) renderChurn();
+      }
     }, 150);
   });
   $('refresh').addEventListener('click', load);
